@@ -3,24 +3,34 @@
 #version 1.2
 #2025-06-24
 # TODO: make the cam follow the sprite
-import pygame
 import os
 import subprocess
 import sys
-import pytmx
-from pytmx.util_pygame import load_pygame
+
 
 #check if user has requirements installed
-def check_requirements():
+def install_requirements():
     req_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
     
     if os.path.exists(req_path):
         try:
-            print("All requirements installed. proceeding to run the game.")
+            print("Checking and installing requirements...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path])
+            print("Requirements are up to date.")
+            os.remove(req_path)
         except subprocess.CalledProcessError:
-            print("Failed to find requirements please run setup.py.")
-        
-check_requirements()
+            print("Failed to install requirements. please install them manually")
+            os.system('pause')
+            sys.exit(1)
+    else:
+        print("requirements.txt not found. continuing")
+
+install_requirements()
+
+#importing liberys
+import pygame
+import pytmx
+from pytmx.util_pygame import load_pygame
 
 pygame.init()
 
