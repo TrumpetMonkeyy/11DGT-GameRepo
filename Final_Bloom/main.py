@@ -11,26 +11,35 @@ from pytmx.util_pygame import load_pygame
 pygame.init()
 
 #display
-screen = ((800, 600))
+import tkinter as tk
+
+root = tk.Tk()
+width = root.winfo_screenwidth()
+height = root.winfo_screenheight()
+
+print(f"Screen resolution: {width}x{height}")
+screen = ((width, height))
 win = pygame.display.set_mode((screen), pygame.RESIZABLE)
+
 
 #title
 pygame.display.set_caption("Final Bloom")
 
-#icon 
+#icons
 image_path = os.path.join(os.path.dirname(__file__), 'assets', 'icons', 'icon.png')
 game_icon = pygame.image.load(image_path)
 pygame.display.set_icon(game_icon)
 
 #frame rate
 clock = pygame.time.Clock()
-#width and hight for the sprite
+#width and height for the sprite
 width = 50
 height = 50
 
 #load tilemap
 tmx_path = os.path.join(os.path.dirname(__file__), 'maps', 'map1.tmx')
 tmx_data = load_pygame(tmx_path)
+
 
 
 # Load player sprite
@@ -84,16 +93,16 @@ while done:
     #set up a list to do this
     keys = pygame.key.get_pressed()
     
-    if keys[pygame.K_LEFT]:
+    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
         x -= vel * dt
-    if keys[pygame.K_RIGHT]:
+    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
         x += vel * dt
-    if keys[pygame.K_UP]:
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
         y -= vel * dt
-    if keys[pygame.K_DOWN]:
+    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
         y += vel * dt
     if keys[pygame.K_ESCAPE]:
-        done = False
+     done = False
 
     
 
