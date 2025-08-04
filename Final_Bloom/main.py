@@ -2,27 +2,12 @@
 #r4t0030
 #version 1.2
 #2025-07-22
-# TODO: make the cam follow the sprite
+# TODO: make the cam follow the sprite and add items
+
+#importing liberys
 import os
 import subprocess
 import sys
-
-#check if user has requirements installed
-req_path = os.path.join(os.path.dirname(__file__), 'requirements.txt') #finds the full path of the requirements.txt file
-if os.path.exists(req_path):
-    try:
-        print("Checking and installing requirements...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path]) #found from reddit to install the requirements
-        print("Requirements are up to date.")
-        os.remove(req_path)
-    except subprocess.CalledProcessError:
-        print("Failed to install requirements. please install them manually")
-        os.system('pause')
-        sys.exit(1)
-else:
-    print("requirements.txt not found. continuing")
-
-#importing liberys
 import pygame
 import pytmx
 from pytmx.util_pygame import load_pygame
@@ -59,6 +44,8 @@ for layer in tmx_data.visible_layers:
                 )
                 scaled_tiles.append((scaled_image, x_tile * tmx_data.tilewidth * scale, y_tile * tmx_data.tileheight * scale))#calculating the tiles posision and coordinates and store with image
 
+
+
 #width and hight for the sprite
 width = 28
 height = 44
@@ -91,6 +78,22 @@ player_back = pygame.transform.scale(player_back_load, (width, height))
 vel = 200
 
 
+<<<<<<< Updated upstream
+=======
+#music
+background_music_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'background_music.mp3')
+def play_background_music():
+    pygame.mixer.music.load(background_music_path)
+    pygame.mixer.music.play(loops=-1, start=0.0, fade_ms=0)
+    pygame.mixer.music.set_volume(0.25)
+play_background_music()
+
+
+enemy_attack_sound_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'music.mp3') # Replace with your sound file
+enemy_attack_sound = pygame.mixer.Sound(enemy_attack_sound_path)
+attack_channel = pygame.mixer.find_channel(True) # True means "find a free channel"
+#attack_channel.play(enemy_attack_sound)
+>>>>>>> Stashed changes
 #frame rate
 clock = pygame.time.Clock()
 
@@ -206,10 +209,13 @@ while done:
     for img, px, py in scaled_tiles:
         win.blit(img, (px, py))
 
+<<<<<<< Updated upstream
     player_front_rect = player_front.get_rect(topleft=(x, y))
     
+=======
+>>>>>>> Stashed changes
     #draw the sprite
-    win.blit(player_front, player_front_rect)
+    win.blit(player_front)
     #movement code
     #moves charactoer for as long as the key gets held down in whatever direction i choose
     #set up a list to do this
