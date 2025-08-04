@@ -93,6 +93,10 @@ def play_background_music():
     pygame.mixer.music.play(loops=-1, start=0.0, fade_ms=0)
     pygame.mixer.music.set_volume(0.25)
 play_background_music()
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 #frame rate
 clock = pygame.time.Clock()
 
@@ -206,11 +210,19 @@ while done:
     for img, px, py in scaled_tiles:
         win.blit(img, (px, py))
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
     player_front_rect = player_front.get_rect(topleft=(x, y))
     player_right_rect = player_right.get_rect(topleft=(x, y))
     #draw the sprite
+<<<<<<< Updated upstream
     win.blit(player_front, player_front_rect)
+=======
+    win.blit(player_front,(x, y))
+>>>>>>> Stashed changes
     #movement code
     #moves charactoer for as long as the key gets held down in whatever direction i choose
     #set up a list to do this
