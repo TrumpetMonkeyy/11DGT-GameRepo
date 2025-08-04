@@ -1,4 +1,4 @@
-#platformer demo
+#Final Bloom
 #r4t0030
 #version 1.2
 #2025-07-22
@@ -50,22 +50,14 @@ for layer in tmx_data.visible_layers:
 width = 28
 height = 44
 
-
-# set the co-ordinates of where the sprite will appear and its hight/width
-x = screen[0]/2 - width/2 - 150
-y = screen[1]/2 - height/2 - 20
-
 # Load player sprite
 player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')#finds the player path
 player_front_load = pygame.image.load(player_front_path).convert_alpha() #loads the sprite
 player_front = pygame.transform.scale(player_front_load, (width, height)) #resize the sprite
 
-
-
 player_right_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_right.png')
 player_right_load = pygame.image.load(player_right_path).convert_alpha()
 player_right = pygame.transform.scale(player_right_load, (width, height))
-
 
 player_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_left.png')
 player_left_load = pygame.image.load(player_left_path).convert_alpha()
@@ -77,6 +69,17 @@ player_back = pygame.transform.scale(player_back_load, (width, height))
 # set velocity to control the speed of the sprite
 vel = 200
 
+# set the co-ordinates of where the sprite will appear and its hight/width
+x = screen[0]/2 - width/2 - 150
+y = screen[1]/2 - height/2 - 20
+
+#music
+background_music_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'background_music.mp3')
+def play_background_music():
+    pygame.mixer.music.load(background_music_path)
+    pygame.mixer.music.play(loops=-1, start=0.0, fade_ms=0)
+    pygame.mixer.music.set_volume(0.25)
+play_background_music()
 
 <<<<<<< Updated upstream
 =======
@@ -101,7 +104,6 @@ clock = pygame.time.Clock()
 def show_main_menu():
     #title
     pygame.display.set_caption("main menu")
-
     bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
     bg_trans = pygame.image.load(bg_trans_path).convert_alpha() #loads the filter for the background
 
@@ -198,7 +200,6 @@ done = True
 while done:
     #title
     pygame.display.set_caption("Final Bloom")
-
     dt = clock.tick(60) / 1000.0 # Limit to 60 frames per second and get delta time in seconds # Limit to 60 frames per second #controls the frame rate
     #quit the game when the window gets closed
     for event in pygame.event.get():
@@ -210,17 +211,15 @@ while done:
         win.blit(img, (px, py))
 
 <<<<<<< Updated upstream
+
     player_front_rect = player_front.get_rect(topleft=(x, y))
     
-=======
->>>>>>> Stashed changes
     #draw the sprite
     win.blit(player_front)
     #movement code
     #moves charactoer for as long as the key gets held down in whatever direction i choose
     #set up a list to do this
     keys = pygame.key.get_pressed()
-    print(x)
     if keys[pygame.K_LEFT] and x > 0: #checks the 
         x -= vel * dt
         win.blit(player_left, (x, y))
