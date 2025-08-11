@@ -1,14 +1,8 @@
 #Final Bloom
-#r4t0030
+#r4t0030 virtualvariant
 #version 1.2
 #2025-07-22
 # TODO: make the cam follow the sprite/hitboxes and fix all the bugs
-import os
-import sys#Final Bloom
-#r4t0030 virtualvariant
-#version 1.2
-#2025-08-11
-# TODO: make the cam follow the sprite
 import os
 import sys
 import pygame
