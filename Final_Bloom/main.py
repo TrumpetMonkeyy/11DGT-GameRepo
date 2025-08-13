@@ -39,14 +39,26 @@ tmx_path = os.path.join(os.path.dirname(__file__), 'maps', 'map1.tmx')
 tmx_data = load_pygame(tmx_path)
 
 #width and height for the sprite
-sprite_width = 28
+sprite_width = 27
 sprite_height = 44
+
+#width and height for the hitbox of the sprite
+tsprite_hbw = 25
+tsprite_hbh = 4
+
+lsprite_hbw = 4
+lsprite_hbh = 42
+
+dsprite_hbw = 25
+dsprite_hbh = 4
+
+rsprite_hbw = 4
+rsprite_hbh = 42
 
 # Load player sprite
 sprite_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player.png')
 player_sprite = pygame.image.load(sprite_path).convert_alpha()
 player_sprite = pygame.transform.scale(player_sprite, (sprite_width, sprite_height))
-
 
 scale = 2  #changes the scale 1=defalt
 scaled_tiles = [] #the coordanets and image gets saved in this list
@@ -70,10 +82,6 @@ for layer in tmx_data.visible_layers:
                     fence_rects.append(pygame.Rect(tile_x, tile_y, tmx_data.tilewidth * scale, tmx_data.tileheight * scale))
 
 
-# set the co-ordinates of where the sprite will appear and its hight/width
-x = screen_width / 2
-y = screen_height / 2
-
 # Load player sprite
 player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')#finds the player path
 player_front_load = pygame.image.load(player_front_path).convert_alpha() #loads the sprite
@@ -94,8 +102,13 @@ player_back_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 
 player_back_load = pygame.image.load(player_back_path).convert_alpha()
 player_back = pygame.transform.scale(player_back_load, (sprite_width, sprite_height))
 
+# set the co-ordinates of where the sprite will appear and its hight/width
+x = screen_width/2
+y = screen_height/2
+
 #put a rectangle around the player
 player_rect = player_front.get_rect(topleft=(x, y))
+
 # load rest of the sprites
 tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'tomb.png')
 tomb_load = pygame.image.load(tomb_path).convert_alpha()
@@ -105,12 +118,11 @@ tombs = [90, 50, 200, 150]
 # Create tomb rectangles for collision detection
 wind_tomb_rect = pygame.Rect(tombs[0], tombs[1], 84, 68)
 fire_tomb_rect = pygame.Rect(tombs[2], tombs[3], 84, 68)
+
 # set velocity to control the speed of the sprite
 vel = 200
 
-# set the co-ordinates of where the sprite will appear and its hight/width
-x = screen[0]/2 - screen_width/2
-y = screen[1]/2 - screen_height/2
+
 
 #music
 background_music_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'background_music.mp3')
@@ -236,6 +248,9 @@ done = True
 wind_tomb = True
 fire_tomb = True
 
+#allow the tilemap to move with the player
+cam_x = 0
+cam_y = 0
 
 while done:
     #allows key inputs to actually be able to do things
@@ -253,19 +268,19 @@ while done:
             if event.key == pygame.K_h and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                 debug = not debug
             
-        #abilatys
+        #abilities
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # Left mouse button
                 if "wind" in abilitys and abilitys_picked == 1:
                     player_attack_sounds()
                 if "fire" in abilitys and abilitys_picked == 2:
                     print("fire")
-               
+
     #draw the tilemap
     for img, px, py in scaled_tiles:
-        win.blit(img, (px, py))
+        win.blit(img, (px + cam_x, py + cam_y))
 
-    #applys a rectangle to the player
+    #applies a rectangle to the player
     player_front_rect = player_front.get_rect(topleft=(x, y))
    
     #draw sprites
@@ -289,16 +304,16 @@ while done:
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP] and collide == False or keys[pygame.K_w] and collide == False:
-        y -= vel * dt
+        cam_y += vel * dt
         win.blit(player_back, (x, y))
     if keys[pygame.K_LEFT] and collide == False or keys[pygame.K_a] and collide == False:
-        x -= vel * dt
+        cam_x += vel * dt
         win.blit(player_left, (x, y))
     if keys[pygame.K_RIGHT] and collide == False or keys[pygame.K_d] and collide == False:
-        x += vel * dt
+        cam_x -= vel * dt
         win.blit(player_right, (x, y))
     if keys[pygame.K_DOWN] and collide == False or keys[pygame.K_s] and collide == False:
-        y += vel * dt
+        cam_y -= vel * dt
         win.blit(player_front, (x, y))
     if keys[pygame.K_ESCAPE]:
         show_main_menu()
