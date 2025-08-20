@@ -2,7 +2,7 @@
 #r4t0030 virtualvariant
 #version 1.2
 #2025-07-22
-# TODO: make the cam follow the sprite/hitboxes and fix all the bugs
+# TODO: hitboxes and fix all the bugs
 import os
 import sys
 import pygame
@@ -69,7 +69,7 @@ for layer in tmx_data.visible_layers:
         for x_tile, y_tile, image in layer.tiles():
             #pulls the tiles from the file and skips the empty and non image tiles/code that helps the 3rd party aplacation
             if image:
-                scaled_image = pygame.transform.scale(#resizeing the tiles
+                scaled_image = pygame.transform.scale(
                     image,
                     (int(tmx_data.tilewidth * scale), int(tmx_data.tileheight * scale))
                 )
@@ -110,14 +110,14 @@ y = screen_height/2
 player_rect = player_front.get_rect(topleft=(x, y))
 
 # load rest of the sprites
-tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'tomb.png')
-tomb_load = pygame.image.load(tomb_path).convert_alpha()
-tomb = pygame.transform.scale(tomb_load, (84.25, 68.5))
-tombs = [90, 50, 200, 150]
+tome_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'tomb.png')
+tome_load = pygame.image.load(tome_path).convert_alpha()
+tome = pygame.transform.scale(tome_load, (84.25, 68.5))
+tomes = [90, 50, 200, 150]
 
-# Create tomb rectangles for collision detection
-wind_tomb_rect = pygame.Rect(tombs[0], tombs[1], 84, 68)
-fire_tomb_rect = pygame.Rect(tombs[2], tombs[3], 84, 68)
+# Create tome rectangles for collision detection
+wind_tome_rect = pygame.Rect(tomes[0], tomes[1], 84, 68)
+fire_tome_rect = pygame.Rect(tomes[2], tomes[3], 84, 68)
 
 # set velocity to control the speed of the sprite
 vel = 200
@@ -245,8 +245,8 @@ show_main_menu() #runs the start menu before the game runs
 debug = False
 collide = False
 done = True
-wind_tomb = True
-fire_tomb = True
+wind_tome = True
+fire_tome = True
 
 #allow the tilemap to move with the player
 cam_x = 0
@@ -287,11 +287,11 @@ while done:
     player_rect = player_front.get_rect(topleft=(x, y))
     win.blit(player_front, (x, y))
 
-    if wind_tomb:
-        win.blit(tomb, (tombs[0], tombs[1]))
-        tomb.get_rect()
-    if fire_tomb:
-        win.blit(tomb, (tombs[2], tombs[3]))
+    if wind_tome:
+        win.blit(tome, (tomes[0], tomes[1]))
+        tome.get_rect()
+    if fire_tome:
+        win.blit(tome, (tomes[2], tomes[3]))
 
     for fence in fence_rects:
         if player_rect.colliderect(fence):
@@ -334,13 +334,13 @@ while done:
     print(abilitys_picked)
     print(abilitys)
 
-    if player_rect.colliderect(wind_tomb_rect):
+    if player_rect.colliderect(wind_tome_rect):
         if keys[pygame.K_b] and "wind" not in abilitys:
-            wind_tomb = False
+            wind_tome = False
             abilitys.append("wind")
-    if player_rect.colliderect(fire_tomb_rect):
+    if player_rect.colliderect(fire_tome_rect):
         if keys[pygame.K_b] and "fire" not in abilitys:
-            fire_tomb = False
+            fire_tome = False
             abilitys.append("fire")
     #update the display
     pygame.display.update()
