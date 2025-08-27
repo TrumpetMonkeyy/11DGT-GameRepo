@@ -15,6 +15,7 @@ pygame.init()
 #display
 import tkinter as tk
 
+#sets the screen size
 root = tk.Tk()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -87,17 +88,14 @@ for layer in tmx_data.visible_layers:
 x = screen_width / 2
 y = screen_height / 2
 
-# Load player sprite
+# Load player sprite's
 player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')#finds the player path
 player_front_load = pygame.image.load(player_front_path).convert_alpha() #loads the sprite
 player_front = pygame.transform.scale(player_front_load, (sprite_width, sprite_height)) #resize the sprite
 
-
-
 player_right_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_right.png')
 player_right_load = pygame.image.load(player_right_path).convert_alpha()
 player_right = pygame.transform.scale(player_right_load, (sprite_width, sprite_height))
-
 
 player_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_left.png')
 player_left_load = pygame.image.load(player_left_path).convert_alpha()
@@ -131,14 +129,20 @@ empty_ui = pygame.image.load(empty_ui_path).convert_alpha()
 #vignette_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'Vignette.png')
 #vignette_img = pygame.image.load(vignette_path).convert_alpha()
 #vignette = pygame.transform.scale(vignette_img, (screen_width, screen_height))
-#put a rectangle around the player
+
+#put a rectangle around the player for hitboxes
 player_rect = player_front.get_rect(topleft=(x, y))
 
-# load rest of the sprites
+# load tomes
 tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'tomb.png')
 tomb_load = pygame.image.load(tomb_path).convert_alpha()
 tomb = pygame.transform.scale(tomb_load, (84.25, 68.5))
 tombs = [90, 50, 200, 150, 300, 300, 80, 90]
+
+#load enemys
+enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')
+enemy_load = pygame.image.load(enemy_path).convert_alpha()
+enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
 
 
 # set velocity to control the speed of the sprite
@@ -160,11 +164,12 @@ play_background_music()
 
 def player_attack_sounds():
     e_hit_channel.play(e_hit_sound)
+
 #abilitys
 abilitys = []
 abilitys_picked = 0
 
-#enemies
+
 #difficultys
 difficulty_settings = {
     'easy': [
@@ -185,7 +190,6 @@ difficulty_settings = {
 }
 
 difficulty = 'easy'
-
 
 def diff_menu(): 
     global difficulty1
@@ -224,19 +228,9 @@ def diff_menu():
 current_difficulty = difficulty_settings.get(difficulty, {})
 
 
-
-enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')
-enemy_load = pygame.image.load(enemy_path).convert_alpha()
-enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
-
 # Initialize attack rectangles (positions will be updated each frame)
 attack_rect_r = pygame.Rect(0, 0, 70, 80)
 attack_rect_l = pygame.Rect(0, 0, 60, 80)
-
-
-# Store last 10 key presses (only arrow keys or WASD)
-last_keys = []
-
 
 
 #frame rate
@@ -340,7 +334,7 @@ show_main_menu() #runs the start menu before the game runs
 
 current_difficulty = difficulty_settings.get(difficulty, {})
 num_enemies = current_difficulty[0]  # Change this number to add/remove enemies
-enemy_speed = current_difficulty[1]
+enemy_speed = current_difficulty[1] #sets the enemy speed based on the diff
 follow_radius = current_difficulty[2]  # enemies only follow player within this distance
 print(difficulty)
 
@@ -386,7 +380,7 @@ while done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_h and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                 debug = not debug
-            # Move ability selection to event handling for immediate response
+            # sets a verable that changes the ability you selected
             elif event.key == pygame.K_1:
                 abilitys_picked = 1
             elif event.key == pygame.K_2:
@@ -400,19 +394,25 @@ while done:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Left mouse button
                 if "wind" in abilitys and abilitys_picked == 1:
-                    player_attack_sounds()
-                    # Check if any enemy is inside the attack hitbox (wind attack: right rectangle)
+                    player_attack_sounds() #plays a sound
+
+                    # Check if any enemy is inside the attack hitbox
                     for i in range(0, len(enemies), 2):
                         # Convert enemy world coordinates to screen coordinates
                         enemy_screen_x = enemies[i] + cam_x
                         enemy_screen_y = enemies[i + 1] + cam_y
                         enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, sprite_width, sprite_height)
+                        #allows to differ from left side and right side
                         if attack_rect_r.colliderect(enemy_rect):
                             print(f"Wind attack hit enemy right {i//2 + 1}!")
                         if attack_rect_l.colliderect(enemy_rect):
                             print(f"Wind attack hit enemy left {i//2 + 1}!")
                 elif "fire" in abilitys and abilitys_picked == 2:
                     print("fire")
+                elif "water" in abilitys and abilitys_picked == 3:
+                    print("water")
+                elif "earth" in abilitys and abilitys_picked == 4:
+                    print("earth")
 
     #draw the tilemap
     for img, px, py in scaled_tiles:
@@ -441,6 +441,7 @@ while done:
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
+    #displays the diff tombs to the screen
     if wind_tomb:
         win.blit(tomb, (tombs[0] + cam_x, tombs[1]+ cam_y))
         tomb.get_rect()
@@ -517,61 +518,36 @@ while done:
     if collide == True:
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             cam_y -= vel * dt
-            last_keys.append('u')
-            if len(last_keys) > 10:
-                last_keys.pop(0)
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             cam_x -= vel * dt
-            last_keys.append('l')
-            if len(last_keys) > 10:
-                last_keys.pop(0)
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             cam_y += vel * dt
-            last_keys.append('d')
-            if len(last_keys) > 10:
-                last_keys.pop(0)
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             cam_x += vel * dt
-            last_keys.append('r')
-            if len(last_keys) > 10:
-                last_keys.pop(0)
         collide = False
    
 
     #movement code
     #moves character for as long as the key gets held down in whatever direction i choose
     #set up a list to do this
-
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP] and collide == False or keys[pygame.K_w] and collide == False:
         cam_y += vel * dt
         win.blit(player_back, (x, y))
-        last_keys.append('u')
-        if len(last_keys) > 10:
-            last_keys.pop(0)
     if keys[pygame.K_LEFT] and collide == False or keys[pygame.K_a] and collide == False:
         cam_x += vel * dt
         win.blit(player_left, (x, y))
-        last_keys.append('l')
-        if len(last_keys) > 10:
-            last_keys.pop(0)
     if keys[pygame.K_RIGHT] and collide == False or keys[pygame.K_d] and collide == False:
         cam_x -= vel * dt
         win.blit(player_right, (x, y))
-        last_keys.append('r')
-        if len(last_keys) > 10:
-            last_keys.pop(0)
     if keys[pygame.K_DOWN] and collide == False or keys[pygame.K_s] and collide == False:
         cam_y -= vel * dt
         win.blit(player_front, (x, y))
-        last_keys.append('d')
-        if len(last_keys) > 10:
-            last_keys.pop(0)
     if keys[pygame.K_ESCAPE]:
         show_main_menu()
        
-    if debug == True:
+    if debug == True: #debug menu
         for rect in fence_rects:
             fence_screen_rect = rect.move(cam_x, cam_y)
             pygame.draw.rect(win, (255, 255, 255), fence_screen_rect, 2)
