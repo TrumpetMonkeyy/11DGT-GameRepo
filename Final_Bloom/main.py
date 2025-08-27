@@ -78,7 +78,7 @@ for layer in tmx_data.visible_layers:
                 tile_y = y_tile * tmx_data.tileheight * scale
                 scaled_tiles.append((scaled_image, tile_x, tile_y))
 
-                # If it's the fence layer, store its rect
+                # If it's the fence layer, store its rect (relative to map, not screen)
                 if layer.name == "fences":
                     fence_rects.append(pygame.Rect(tile_x, tile_y, tmx_data.tilewidth * scale, tmx_data.tileheight * scale))
 
@@ -128,6 +128,9 @@ water = pygame.image.load(water_path).convert_alpha()
 
 empty_ui_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'empty_ui.png')
 empty_ui = pygame.image.load(empty_ui_path).convert_alpha()
+#vignette_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'Vignette.png')
+#vignette_img = pygame.image.load(vignette_path).convert_alpha()
+#vignette = pygame.transform.scale(vignette_img, (screen_width, screen_height))
 #put a rectangle around the player
 player_rect = player_front.get_rect(topleft=(x, y))
 
@@ -137,11 +140,7 @@ tomb_load = pygame.image.load(tomb_path).convert_alpha()
 tomb = pygame.transform.scale(tomb_load, (84.25, 68.5))
 tombs = [90, 50, 200, 150, 300, 300, 80, 90]
 
-# Create tomb rectangles for collision detection
-wind_tomb_rect = pygame.Rect(tombs[0], tombs[1], 84, 68)
-fire_tomb_rect = pygame.Rect(tombs[2], tombs[3], 84, 68)
-earth_tomb_rect = pygame.Rect(tombs[4], tombs[5], 84, 68)
-water_tomb_rect = pygame.Rect(tombs[6], tombs[7], 84, 68)
+
 # set velocity to control the speed of the sprite
 vel = 200
 
@@ -216,22 +215,27 @@ def diff_menu():
                 if event.key == pygame.K_e:
                     difficulty = "easy"
                     return difficulty
-                if event.key == pygame.K_h:
+                elif event.key == pygame.K_h:
                     difficulty = "medium"
                     return difficulty
-                if event.key == pygame.K_i:
+                elif event.key == pygame.K_i:
                     difficulty = "hard"
                     return difficulty
-                return difficulty1
-print(difficulty)
 current_difficulty = difficulty_settings.get(difficulty, {})
-print (current_difficulty)
+
 
 
 enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')
 enemy_load = pygame.image.load(enemy_path).convert_alpha()
-enemy = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
+enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
 
+# Initialize attack rectangles (positions will be updated each frame)
+attack_rect_r = pygame.Rect(0, 0, 70, 80)
+attack_rect_l = pygame.Rect(0, 0, 60, 80)
+
+
+# Store last 10 key presses (only arrow keys or WASD)
+last_keys = []
 
 
 
@@ -338,6 +342,7 @@ current_difficulty = difficulty_settings.get(difficulty, {})
 num_enemies = current_difficulty[0]  # Change this number to add/remove enemies
 enemy_speed = current_difficulty[1]
 follow_radius = current_difficulty[2]  # enemies only follow player within this distance
+print(difficulty)
 
 # enemy positions - will auto-generate based on num_enemies
 enemies = []
@@ -353,7 +358,7 @@ for i in range(num_enemies):
         enemies.extend(enemy_spawn_points[i])  # adds x, y to the list
 
 #game loop
-debug = False
+debug = False #setting up all the verables needed to do things
 collide = False
 done = True
 wind_tomb = True
@@ -365,7 +370,7 @@ water_tomb = True
 cam_x = 0
 cam_y = 0
 
-print(current_difficulty)
+last_enemy_hit_time = 0 #the time when the enemy hit the player last
 while done:
     #allows key inputs to actually be able to do things
     keys = pygame.key.get_pressed()
@@ -393,48 +398,79 @@ while done:
             
         #abilatys
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1: # Left mouse button
+            if event.button == 1:  # Left mouse button
                 if "wind" in abilitys and abilitys_picked == 1:
                     player_attack_sounds()
-                if "fire" in abilitys and abilitys_picked == 2:
+                    # Check if any enemy is inside the attack hitbox (wind attack: right rectangle)
+                    for i in range(0, len(enemies), 2):
+                        # Convert enemy world coordinates to screen coordinates
+                        enemy_screen_x = enemies[i] + cam_x
+                        enemy_screen_y = enemies[i + 1] + cam_y
+                        enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, sprite_width, sprite_height)
+                        if attack_rect_r.colliderect(enemy_rect):
+                            print(f"Wind attack hit enemy right {i//2 + 1}!")
+                        if attack_rect_l.colliderect(enemy_rect):
+                            print(f"Wind attack hit enemy left {i//2 + 1}!")
+                elif "fire" in abilitys and abilitys_picked == 2:
                     print("fire")
 
     #draw the tilemap
     for img, px, py in scaled_tiles:
         win.blit(img, (px + cam_x, py + cam_y))
-
+    #win.blit(vignette, (0, 0))
     #applies a rectangle to the player
     player_front_rect = player_front.get_rect(topleft=(x, y))
-   
     #draw sprites
     player_rect = player_front.get_rect(topleft=(x, y))
     win.blit(player_front, (x, y))
 
+    # Update attack rectangles to follow player position
+    attack_rect_r.topleft = (x + sprite_width/2, y - sprite_height/2)
+    attack_rect_l.topleft = (x - 45, y - sprite_height/2)
+
+    pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
+    pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
+
+
+
+
+
+    # Create tomb rectangles for collision detection
+    wind_tomb_rect = pygame.Rect(tombs[0] + cam_x, tombs[1] + cam_y, 84, 68)
+    fire_tomb_rect = pygame.Rect(tombs[2] + cam_x, tombs[3] + cam_y, 84, 68)
+    earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
+    water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
+    
     if wind_tomb:
-        win.blit(tomb, (tombs[0], tombs[1]))
+        win.blit(tomb, (tombs[0] + cam_x, tombs[1]+ cam_y))
         tomb.get_rect()
     if fire_tomb:
-        win.blit(tomb, (tombs[2], tombs[3]))
+        win.blit(tomb, (tombs[2] + cam_x, tombs[3] + cam_y))
     if earth_tomb:
-        win.blit(tomb, (tombs[4], tombs[5]))
+        win.blit(tomb, (tombs[4] + cam_x, tombs[5] + cam_y))
     if water_tomb:
-        win.blit(tomb, (tombs[6], tombs[7]))
+        win.blit(tomb, (tombs[6] + cam_x, tombs[7] + cam_y))
 
     # draw enemies
     for i in range(0, len(enemies), 2):
-        win.blit(enemy, (enemies[i], enemies[i + 1]))
+        win.blit(enemy_sprite, (enemies[i] + cam_x, enemies[i + 1] + cam_y))
 
     # move enemies towards player (only if within follow radius)
     for i in range(0, len(enemies), 2):
-        enemy_x = enemies[i]
-        enemy_y = enemies[i + 1]
+        enemy_x = enemies[i] + cam_x
+        enemy_y = enemies[i + 1] + cam_y
         
-        # simple distance check (no complex math)
+        # simple distance check
         x_distance = abs(x - enemy_x)
         y_distance = abs(y - enemy_y)
         
         # only move if close enough (simple rectangle check)
         if x_distance < follow_radius and y_distance < follow_radius:
+            # Store original position before moving
+            original_x = enemies[i]
+            original_y = enemies[i + 1]
+            
+            # Move enemy towards player
             if x > enemy_x:
                 enemies[i] += enemy_speed * dt
             if x < enemy_x:
@@ -443,14 +479,36 @@ while done:
                 enemies[i + 1] += enemy_speed * dt
             if y < enemy_y:
                 enemies[i + 1] -= enemy_speed * dt
+            
+            # Check for fence collision
+            enemy_rect = pygame.Rect(enemies[i], enemies[i + 1], sprite_width, sprite_height)
+            enemy_hit_fence = False
+            
+            for fence in fence_rects:
+                if enemy_rect.colliderect(fence):
+                    enemy_hit_fence = True
+                    break
+            
+            # If enemy hit fence, move back to original position
+            if enemy_hit_fence:
+                enemies[i] = original_x
+                enemies[i + 1] = original_y
 
     # Check collision with enemies
+    current_time = pygame.time.get_ticks()
     for i in range(0, len(enemies), 2):
-        if (enemies[i] - 20) <= x <= (enemies[i] + 20) and (enemies[i + 1] - 20) <= y <= (enemies[i + 1] + 20):
-            print(f"Hit by enemy {i//2 + 1}!")
+        enemy_screen_x = enemies[i] + cam_x
+        enemy_screen_y = enemies[i + 1] + cam_y
+        if (enemy_screen_x - 20) <= x <= (enemy_screen_x + 20) and (enemy_screen_y - 20) <= y <= (enemy_screen_y + 20):
+            # Only print if at least 1 second has passed since last hit
+            if current_time - last_enemy_hit_time > 1000:
+                print(f"Hit by enemy {i//2 + 1}!")
+                last_enemy_hit_time = current_time
 
     for fence in fence_rects:
-        if player_rect.colliderect(fence):
+        # Adjust fence position by camera offset for collision detection
+        fence_screen_rect = fence.move(cam_x, cam_y)
+        if player_rect.colliderect(fence_screen_rect):
             collide = True
 
 
@@ -458,13 +516,25 @@ while done:
     #tome collision
     if collide == True:
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            y = y + 25
+            cam_y -= vel * dt
+            last_keys.append('u')
+            if len(last_keys) > 10:
+                last_keys.pop(0)
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            x = x + 25
+            cam_x -= vel * dt
+            last_keys.append('l')
+            if len(last_keys) > 10:
+                last_keys.pop(0)
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            y = y - 25
+            cam_y += vel * dt
+            last_keys.append('d')
+            if len(last_keys) > 10:
+                last_keys.pop(0)
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            x = x - 25
+            cam_x += vel * dt
+            last_keys.append('r')
+            if len(last_keys) > 10:
+                last_keys.pop(0)
         collide = False
    
 
@@ -477,25 +547,38 @@ while done:
     if keys[pygame.K_UP] and collide == False or keys[pygame.K_w] and collide == False:
         cam_y += vel * dt
         win.blit(player_back, (x, y))
+        last_keys.append('u')
+        if len(last_keys) > 10:
+            last_keys.pop(0)
     if keys[pygame.K_LEFT] and collide == False or keys[pygame.K_a] and collide == False:
         cam_x += vel * dt
         win.blit(player_left, (x, y))
+        last_keys.append('l')
+        if len(last_keys) > 10:
+            last_keys.pop(0)
     if keys[pygame.K_RIGHT] and collide == False or keys[pygame.K_d] and collide == False:
         cam_x -= vel * dt
         win.blit(player_right, (x, y))
+        last_keys.append('r')
+        if len(last_keys) > 10:
+            last_keys.pop(0)
     if keys[pygame.K_DOWN] and collide == False or keys[pygame.K_s] and collide == False:
         cam_y -= vel * dt
         win.blit(player_front, (x, y))
+        last_keys.append('d')
+        if len(last_keys) > 10:
+            last_keys.pop(0)
     if keys[pygame.K_ESCAPE]:
         show_main_menu()
        
     if debug == True:
         for rect in fence_rects:
-            pygame.draw.rect(win, (255, 255, 255), rect, 2)
+            fence_screen_rect = rect.move(cam_x, cam_y)
+            pygame.draw.rect(win, (255, 255, 255), fence_screen_rect, 2)
         # Draw enemy positions and follow radius
         for i in range(0, len(enemies), 2):
-            enemy_x = enemies[i]
-            enemy_y = enemies[i + 1]
+            enemy_x = enemies[i] + cam_x
+            enemy_y = enemies[i + 1] + cam_y
             pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, sprite_width, sprite_height), 2)
             pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + sprite_width/2), int(enemy_y + sprite_height/2)), follow_radius, 1)
 
@@ -509,7 +592,6 @@ while done:
         win.blit(ui_3, (0, 0))
     if abilitys_picked == 4:
         win.blit(ui_4, (0, 0))
-
     if "wind" in abilitys:
         win.blit(wind, (6, 6))
     if "fire" in abilitys:
