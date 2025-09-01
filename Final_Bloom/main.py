@@ -1,8 +1,8 @@
-#Final Bloom
-#r4t0030 virtualvariant
-#version 1.2
-#2025-08-21
-# TODO: make the cam follow the sprite/hitboxes and fix all the bugs
+# Final Bloom
+# r4t0030 virtualvariant
+# version 2.2
+# 2025-09-1
+
 import os
 import sys
 import pygame
@@ -12,10 +12,10 @@ from pytmx.util_pygame import load_pygame
 
 pygame.init()
 
-#display
+# display
 import tkinter as tk
 
-#sets the screen size
+# sets the screen size
 root = tk.Tk()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -25,25 +25,26 @@ screen = ((screen_width, screen_height))
 win = pygame.display.set_mode((screen), pygame.RESIZABLE)
 
 
-#title
+# title
 pygame.display.set_caption("Final Bloom")
 
-#hides mouse cursor
+# hides mouse cursor
 pygame.mouse.set_visible(False)
 
-#icons
+# icons
 image_path = os.path.join(os.path.dirname(__file__), 'assets', 'icons', 'icon.png')
 game_icon = pygame.image.load(image_path)
 pygame.display.set_icon(game_icon)
-#load tilemap
+# load tilemap
 tmx_path = os.path.join(os.path.dirname(__file__), 'maps', 'map1.tmx')
 tmx_data = load_pygame(tmx_path)
 
-#width and height for the sprite
+# width and height for the sprite
 sprite_width = 27
 sprite_height = 44
 
-#width and height for the hitbox of the sprite
+
+# width and height for the hitbox of the sprite
 tsprite_hbw = 25
 tsprite_hbh = 4
 
@@ -57,21 +58,17 @@ rsprite_hbw = 4
 rsprite_hbh = 42
 
 # Load player sprite
-sprite_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player.png')
-player_sprite = pygame.image.load(sprite_path).convert_alpha()
-player_sprite = pygame.transform.scale(player_sprite, (sprite_width, sprite_height))
 
-
-scale = 2  #changes the scale 1=defalt
-scaled_tiles = [] #the coordanets and image gets saved in this list
+scale = 2  # changes the scale 1=defalt
+scaled_tiles = [] # the coordanets and image gets saved in this list
 fence_rects = []
 
 for layer in tmx_data.visible_layers:
     if isinstance(layer, pytmx.TiledTileLayer):
         for x_tile, y_tile, image in layer.tiles():
-            #pulls the tiles from the file and skips the empty and non image tiles/code that helps the 3rd party aplacation
+            # pulls the tiles from the file and skips the empty and non image tiles/code that helps the 3rd party aplacation
             if image:
-                scaled_image = pygame.transform.scale(#resizeing the tiles
+                scaled_image = pygame.transform.scale(# resizeing the tiles
                     image,
                     (int(tmx_data.tilewidth * scale), int(tmx_data.tileheight * scale))
                 )
@@ -89,9 +86,9 @@ x = screen_width / 2
 y = screen_height / 2
 
 # Load player sprite's
-player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')#finds the player path
-player_front_load = pygame.image.load(player_front_path).convert_alpha() #loads the sprite
-player_front = pygame.transform.scale(player_front_load, (sprite_width, sprite_height)) #resize the sprite
+player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')# finds the player path
+player_front_load = pygame.image.load(player_front_path).convert_alpha() # loads the sprite
+player_front = pygame.transform.scale(player_front_load, (sprite_width, sprite_height)) # resize the sprite
 
 player_right_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_right.png')
 player_right_load = pygame.image.load(player_right_path).convert_alpha()
@@ -105,7 +102,30 @@ player_back_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 
 player_back_load = pygame.image.load(player_back_path).convert_alpha()
 player_back = pygame.transform.scale(player_back_load, (sprite_width, sprite_height))
 
-#uis
+player_wind_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'windL.png')
+player_wind_left_load = pygame.image.load(player_wind_left_path).convert_alpha()
+sprite_animation_width, sprite_animation_height = player_wind_left_load.get_size()
+player_wind_left = pygame.transform.scale(player_wind_left_load, (sprite_animation_width * 2, sprite_animation_height * 2))
+
+# Load fire attack sprite
+player_fire_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'fireL.png')
+player_fire_left_load = pygame.image.load(player_fire_left_path).convert_alpha()
+fire_animation_width, fire_animation_height = player_fire_left_load.get_size()
+player_fire_left = pygame.transform.scale(player_fire_left_load, (fire_animation_width * 2, fire_animation_height * 2))
+
+# Load earth attack sprite
+player_earth_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'earthL.png')
+player_earth_left_load = pygame.image.load(player_earth_left_path).convert_alpha()
+earth_animation_width, earth_animation_height = player_earth_left_load.get_size()
+player_earth_left = pygame.transform.scale(player_earth_left_load, (earth_animation_width * 2, earth_animation_height * 2))
+
+# Load water attack sprite
+player_water_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'waterL.png')
+player_water_left_load = pygame.image.load(player_water_left_path).convert_alpha()
+water_animation_width, water_animation_height = player_water_left_load.get_size()
+player_water_left = pygame.transform.scale(player_water_left_load, (water_animation_width * 2, water_animation_height * 2))
+
+# uis
 ui_1_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'ui_1.png')
 ui_1 = pygame.image.load(ui_1_path).convert_alpha()
 ui_2_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'ui_2.png')
@@ -123,23 +143,36 @@ earth_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', '
 earth = pygame.image.load(earth_path).convert_alpha()
 water_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'fire.png')
 water = pygame.image.load(water_path).convert_alpha()
-
 empty_ui_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'empty_ui.png')
 empty_ui = pygame.image.load(empty_ui_path).convert_alpha()
-#vignette_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'Vignette.png')
-#vignette_img = pygame.image.load(vignette_path).convert_alpha()
-#vignette = pygame.transform.scale(vignette_img, (screen_width, screen_height))
 
-#put a rectangle around the player for hitboxes
+heart_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'heart_64x64.png')
+heart = pygame.image.load(heart_path).convert_alpha()
+heart_width, heart_height = heart.get_size()
+
+
+# put a rectangle around the player for hitboxes
 player_rect = player_front.get_rect(topleft=(x, y))
 
-# load tomes
-tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'tomb.png')
-tomb_load = pygame.image.load(tomb_path).convert_alpha()
-tomb = pygame.transform.scale(tomb_load, (84.25, 68.5))
+# load tomes - different sprite for each element
+wind_tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'wind.png')
+fire_tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'fire.png')
+earth_tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'earth.png')
+water_tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'water.png')
+# Try to load individual tome sprites
+wind_tomb_load = pygame.image.load(wind_tomb_path).convert_alpha()
+wind_tomb_sprite = pygame.transform.scale(wind_tomb_load, (21*2+8, 29*2+8))
+fire_tomb_load = pygame.image.load(fire_tomb_path).convert_alpha()
+fire_tomb_sprite = pygame.transform.scale(fire_tomb_load, (84.25, 68.5))
+earth_tomb_load = pygame.image.load(earth_tomb_path).convert_alpha()
+earth_tomb_sprite = pygame.transform.scale(earth_tomb_load, (24*2, 32*2))
+water_tomb_load = pygame.image.load(water_tomb_path).convert_alpha()
+water_tomb_sprite = pygame.transform.scale(water_tomb_load, (84.25, 68.5))
+
+
 tombs = [90, 50, 200, 150, 300, 300, 80, 90]
 
-#load enemys
+# load enemys
 enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')
 enemy_load = pygame.image.load(enemy_path).convert_alpha()
 enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
@@ -149,7 +182,7 @@ enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
 vel = 200
 
 
-#music
+# music
 background_music_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'background_music.mp3')
 e_hit_path = os.path.join(os.path.dirname(__file__), 'assets', 'audio', 'woush.flac')
 background_music_sound = pygame.mixer.Sound(background_music_path)
@@ -165,28 +198,45 @@ play_background_music()
 def player_attack_sounds():
     e_hit_channel.play(e_hit_sound)
 
-#abilitys
+# abilitys
 abilitys = []
 abilitys_picked = 0
 
 
-#difficultys
+# difficultys
 difficulty_settings = {
     'easy': [
-        5,
-        65,  # Units per frame
-        150, # Pixels
+        5,   # Number of enemies
+        65,  # Enemy speed (units per frame)
+        150, # Follow radius (pixels)
+        3,   # Enemy health
+        50,  # Base knockback strength
+        8,   # Player health
     ],
     'medium': [
-        10,
-        100,
-        200,
+        10, # num of enemies
+        100, # speed
+        200, # player detection
+        5,   # Enemy health
+        40,  # Base knockback strength
+        5,   # Player health
     ],
     'hard': [
-        18,
-        200,
-        350,
+        18, # num of enemies
+        200, # speed
+        350, # player detection
+        8,   # Enemy health
+        30,  # Base knockback strength
+        3,   # Player health
     ],
+}
+
+# Ability damage and knockback values (damage, knockback_multiplier)
+ability_stats = {
+    'wind': {'damage': 0.5, 'knockback_multiplier': 10.0, 'description': 'low damage, high knockback'},
+    'fire': {'damage': 2, 'knockback_multiplier': 0.7, 'description': 'High damage, low knockback'},
+    'water': {'damage': 1, 'knockback_multiplier': 5.0, 'description': 'medium damage, high knockback'},
+    'earth': {'damage': 3, 'knockback_multiplier': 0.5, 'description': 'Very high damage, very low knockback'}
 }
 
 difficulty = 'easy'
@@ -195,21 +245,21 @@ def diff_menu():
     global difficulty1
     difficulty1 = 1
     global difficulty
-    #title
+    # title
     pygame.display.set_caption("Difficulty")
 
     bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
-    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() #loads the filter for the background
+    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() # loads the filter for the background
 
-    small_font = pygame.font.SysFont(None, 36)  #sets the fonts
-    info_text = small_font.render("press 'E' to select easy mode. 'H', for hard mode and 'I' for impossible", True, (255, 255, 255)) #renders the fonts and sets the colors
+    small_font = pygame.font.SysFont(None, 36)  # sets the fonts
+    info_text = small_font.render("press 'E' to select easy mode. 'H', for hard mode and 'I' for impossible", True, (255, 255, 255)) # renders the fonts and sets the colors
     info_text_rect = info_text.get_rect(center = (screen_width/2, screen_height*.56))
     while True:
         clock.tick(60)
         for img, px, py in scaled_tiles:
-            win.blit(img, (px, py)) #shows the map
-        win.blit(bg_trans, (0, 0)) #applys the filter ontop
-        win.blit(info_text, info_text_rect) #displays the text and places them at coordanets
+            win.blit(img, (px, py)) # shows the map
+        win.blit(bg_trans, (0, 0)) # applys the filter ontop
+        win.blit(info_text, info_text_rect) # displays the text and places them at coordanets
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -226,30 +276,30 @@ def diff_menu():
                     difficulty = "hard"
                     return difficulty
 current_difficulty = difficulty_settings.get(difficulty, {})
-
+print(current_difficulty)
 
 # Initialize attack rectangles (positions will be updated each frame)
 attack_rect_r = pygame.Rect(0, 0, 70, 80)
 attack_rect_l = pygame.Rect(0, 0, 60, 80)
 
 
-#frame rate
+# frame rate
 clock = pygame.time.Clock()
 
 difficulty1 = 0
-#main menu
+# main menu
 def show_main_menu():
-    #title
+    # title
     pygame.display.set_caption("main menu")
 
     bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
-    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() #loads the filter for the background
+    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() # loads the filter for the background
 
     title_font_path = os.path.join(os.path.dirname(__file__), 'assets', 'fonts', 'CASTELAR.ttf')
-    title_font = pygame.font.Font(title_font_path, 72) #sets the fonts
+    title_font = pygame.font.Font(title_font_path, 72) # sets the fonts
     small_font = pygame.font.SysFont(None, 36)
 
-    title_text = title_font.render("Final Bloom", True, (200, 200, 200)) #renders the fonts and sets the colors
+    title_text = title_font.render("Final Bloom", True, (200, 200, 200)) # renders the fonts and sets the colors
     title_text_rect = title_text.get_rect(center = (screen_width/2, screen_height*.43))
    
     play_text = small_font.render("Press ENTER to Play", True, (180, 180, 180))
@@ -264,10 +314,10 @@ def show_main_menu():
     while True:
         clock.tick(60)
         for img, px, py in scaled_tiles:
-            win.blit(img, (px, py)) #shows the map
-        win.blit(bg_trans, (0, 0)) #applys the filter ontop
+            win.blit(img, (px, py)) # shows the map
+        win.blit(bg_trans, (0, 0)) # applys the filter ontop
 
-        win.blit(title_text, title_text_rect) #places out the text in the coordanets
+        win.blit(title_text, title_text_rect) # places out the text in the coordanets
         win.blit(play_text, play_text_rect)
         win.blit(quit_text, quit_text_rect)
         win.blit(help_text, help_text_rect)
@@ -291,31 +341,53 @@ def show_main_menu():
             show_help_menu()
 
 def show_help_menu():
-    #title
+    # title
     pygame.display.set_caption("HELP ME")
 
     bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
-    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() #loads the filter for the background
+    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() # loads the filter for the background
 
 
-    small_font = pygame.font.SysFont(None, 36)  #sets the fonts
-    help_text = small_font.render("Use arrow keys or WASD keys to move", True, (255, 255, 255)) #renders the fonts and sets the colors
-    help_text_rect = help_text.get_rect(center = (screen_width/2, screen_height*.48))
+    small_font = pygame.font.SysFont(None, 36)  # sets the fonts
 
-    info_text = small_font.render("press ENTER to start playing, or ESC to go back to the menu", True, (255, 255, 255))
-    info_text_rect = info_text.get_rect(center = (screen_width/2, screen_height*.52))
+    help_text = small_font.render("Use arrow keys or WASD keys to move", True, (255, 255, 255))
+    help_text_rect = help_text.get_rect(center=(screen_width // 2, screen_height // 2 - 70))
+
+    help_text1 = small_font.render("To attack an enemy use [E or /] depending on your movement keys", True, (255, 255, 255))
+    help_text1_rect = help_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 30))
+
+    info_text1 = small_font.render("To collect tomes press 'B' while on top of one", True, (255, 255, 255))
+    info_text_rect1 = info_text1.get_rect(center=(screen_width // 2, screen_height // 2 + 10))
+
+    ability_info_text1 = small_font.render("Wind: low damage, very high knockback | Fire: High damage, low knockback", True, (255, 255, 255))
+    ability_info_text_rect1 = ability_info_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 300))
+    ability_info_text2 = small_font.render("Water: medium damage, high knockback | Earth: Very high damage, very low knockback", True, (255, 255, 255))
+    ability_info_text_rect2 = ability_info_text2.get_rect(center=(screen_width // 2, screen_height // 2 - 260))
+    ability_info_text3 = small_font.render("These are diffrent eliments you will get to obtane along your jerny.", True, (255, 255, 255))
+    ability_info_text_rect3 = ability_info_text3.get_rect(center=(screen_width // 2, screen_height // 2 - 220))
+    ability_info_text4 = small_font.render(" Take the time to get used to the goods and bads of each of them.", True, (255, 255, 255))
+    ability_info_text_rect4 = ability_info_text4.get_rect(center=(screen_width // 2, screen_height // 2 - 180))
+
+    info_text = small_font.render("Press ENTER to start playing, or ESC to go back to the menu", True, (255, 255, 255))
+    info_text_rect = info_text.get_rect(center=(screen_width // 2, screen_height // 2 + 90))
 
     while True:
-        #win.fill((0, 0, 0)) #sets the background to black  
+        # win.fill((0, 0, 0)) # sets the background to black  
         clock.tick(60)
         for img, px, py in scaled_tiles:
-            win.blit(img, (px, py)) #shows the map
-        win.blit(bg_trans, (0, 0)) #applys the filter ontop
+            win.blit(img, (px, py)) # shows the map
+        win.blit(bg_trans, (0, 0)) # applys the filter ontop
 
-        win.blit(help_text, help_text_rect) #displays the text and places them at coordanets
+        win.blit(help_text, help_text_rect) # displays the text and places them at coordanets
         win.blit(info_text, info_text_rect)
-       
-        for event in pygame.event.get(): #looks for key presses and sets them to do somthing
+        win.blit(help_text1, help_text1_rect)
+        win.blit(info_text1, info_text_rect1)
+        
+        win.blit(ability_info_text1, ability_info_text_rect1)
+        win.blit(ability_info_text2, ability_info_text_rect2)
+        win.blit(ability_info_text3, ability_info_text_rect3)  
+        win.blit(ability_info_text4, ability_info_text_rect4)
+        for event in pygame.event.get(): # looks for key presses and sets them to do somthing
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -328,17 +400,67 @@ def show_help_menu():
        
         pygame.display.update()
 
+def game_over():
+    # title
+    pygame.display.set_caption("Game Over")
 
-show_main_menu() #runs the start menu before the game runs
+    bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
+    bg_trans = pygame.image.load(bg_trans_path).convert_alpha() # loads the filter for the background
+
+    small_font = pygame.font.SysFont(None, 36)  # sets the fonts
+
+    help_text = small_font.render("your jerny has sadly come to an end", True, (255, 255, 255))
+    help_text_rect = help_text.get_rect(center=(screen_width // 2, screen_height // 2 - 80))
+    help_text1 = small_font.render("you have failed to save New Zealand from 'Death'", True, (255, 255, 255))
+    help_text1_rect = help_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 40))
+    info_text1 = small_font.render("to restart press 'R'", True, (255, 255, 255))
+    info_text_rect1 = info_text1.get_rect(center=(screen_width // 2, screen_height // 2))
+    info_text2 = small_font.render("or press 'esc' to quit", True, (255, 255, 255))
+    info_text_rect2 = info_text2.get_rect(center=(screen_width // 2, screen_height // 2 + 40))
+
+    while True:
+        clock.tick(60)
+        for img, px, py in scaled_tiles:
+            win.blit(img, (px, py)) # shows the map
+        win.blit(bg_trans, (0, 0)) # applys the filter ontop
+
+        win.blit(help_text, help_text_rect) # displays the text and places them at coordanets
+        win.blit(help_text1, help_text1_rect)
+        win.blit(info_text1, info_text_rect1)
+        win.blit(info_text2, info_text_rect2)
+        
+        for event in pygame.event.get(): # looks for key presses and sets them to do somthing
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+           
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            return "restart"  # Return a signal to restart the game
+        if keys[pygame.K_ESCAPE]:
+            pygame.quit()
+            sys.exit()
+       
+        pygame.display.update()
+
+
+show_main_menu() # runs the start menu before the game runs
 # enemy settings
 
 current_difficulty = difficulty_settings.get(difficulty, {})
-num_enemies = current_difficulty[0]  # Change this number to add/remove enemies
-enemy_speed = current_difficulty[1] #sets the enemy speed based on the diff
+num_enemies = current_difficulty[0]  # Number of enemies
+enemy_speed = current_difficulty[1] # Enemy speed based on difficulty
 follow_radius = current_difficulty[2]  # enemies only follow player within this distance
-print(difficulty)
+enemy_max_health = current_difficulty[3]  # Enemy health
+knockback_strength = current_difficulty[4]  # Knockback strength
+player_max_health = current_difficulty[5]  # Player health from difficulty
+print(f"Difficulty: {difficulty}")
 
-# enemy positions - will auto-generate based on num_enemies
+# Initialize player health system
+player_health = player_max_health
+
+# enemy positions and data - using a more organized structure
+enemy = []
 enemies = []
 enemy_spawn_points = [
     [400, 300], [600, 400], [800, 200], [300, 500], 
@@ -346,37 +468,54 @@ enemy_spawn_points = [
     [100, 400], [750, 150], [350, 700], [550, 100]
 ]
 
-# create enemies based on num_enemies setting
+# Create enemies with health, position, and flash data
 for i in range(num_enemies):
     if i < len(enemy_spawn_points):
-        enemies.extend(enemy_spawn_points[i])  # adds x, y to the list
+        enemies.append({
+            'x': enemy_spawn_points[i][0],
+            'y': enemy_spawn_points[i][1], 
+            'health': enemy_max_health,
+            'max_health': enemy_max_health,
+            'flash_time': 0,  # For white flash effect
+            'knockback_x': 0,  # Knockback velocity
+            'knockback_y': 0
+        })
 
-#game loop
-debug = False #setting up all the verables needed to do things
+# game loop
+debug = False # setting up all the verables needed to do things
 collide = False
 done = True
 wind_tomb = True
 fire_tomb = True
 earth_tomb = True
 water_tomb = True
-
-#allow the tilemap to move with the player
+w_attack = None
+f_attack = None
+e_attack = None
+a_attack = None
+# allow the tilemap to move with the player
 cam_x = 0
 cam_y = 0
 
-last_enemy_hit_time = 0 #the time when the enemy hit the player last
+last_enemy_hit_time = 0 # the time when the enemy hit the player last
+animation_time = 0
 while done:
-    #allows key inputs to actually be able to do things
+    # allows key inputs to actually be able to do things
     keys = pygame.key.get_pressed()
-    #title
+    # title
     pygame.display.set_caption("Final Bloom")
-    dt = clock.tick(60) / 1000.0 # Limit to 60 frames per second and get delta time in seconds # Limit to 60 frames per second #controls the frame rate
-    #quit the game when the window gets closed
+    dt = clock.tick(60) / 1000.0 # Limit to 60 frames per second and get delta time in seconds # Limit to 60 frames per second # controls the frame rate
+    
+    # Update attack rectangles first, before processing events
+    attack_rect_r.topleft = (x + sprite_width/2, y - sprite_height/2)
+    attack_rect_l.topleft = (x - 45, y - sprite_height/2)
+    
+    # quit the game when the window gets closed
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = False
 
-        #debug mode
+        # debug mode
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_h and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                 debug = not debug
@@ -390,48 +529,90 @@ while done:
             elif event.key == pygame.K_4:
                 abilitys_picked = 4
             
-        #abilatys
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:  # Left mouse button
+        # abilatys
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e or event.key == pygame.K_SLASH:
+                # Determine which ability to use based on selection
+                current_ability = None
                 if "wind" in abilitys and abilitys_picked == 1:
-                    player_attack_sounds() #plays a sound
-
-                    # Check if any enemy is inside the attack hitbox
-                    for i in range(0, len(enemies), 2):
-                        # Convert enemy world coordinates to screen coordinates
-                        enemy_screen_x = enemies[i] + cam_x
-                        enemy_screen_y = enemies[i + 1] + cam_y
-                        enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, sprite_width, sprite_height)
-                        #allows to differ from left side and right side
-                        if attack_rect_r.colliderect(enemy_rect):
-                            print(f"Wind attack hit enemy right {i//2 + 1}!")
-                        if attack_rect_l.colliderect(enemy_rect):
-                            print(f"Wind attack hit enemy left {i//2 + 1}!")
+                    current_ability = "wind"
                 elif "fire" in abilitys and abilitys_picked == 2:
-                    print("fire")
+                    current_ability = "fire"
                 elif "water" in abilitys and abilitys_picked == 3:
-                    print("water")
+                    current_ability = "water"
                 elif "earth" in abilitys and abilitys_picked == 4:
-                    print("earth")
+                    current_ability = "earth"
+                
+                if current_ability:
+                    # Get ability stats
+                    ability_damage = ability_stats[current_ability]['damage']
+                    ability_knockback = ability_stats[current_ability]['knockback_multiplier']
+                    
+                    # Check if any enemy is inside the attack hitbox
+                    enemies_to_remove = []
+                    for i, enemy in enumerate(enemies):
+                        # Convert enemy world coordinates to screen coordinates
+                        enemy_screen_x = enemy['x'] + cam_x
+                        enemy_screen_y = enemy['y'] + cam_y
+                        enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, sprite_width, sprite_height)
+                        
+                        hit_direction = None
+                        # Check for collision with attack rectangles
+                        if attack_rect_r.colliderect(enemy_rect):
+                            hit_direction = "right"
+                        elif attack_rect_l.colliderect(enemy_rect):
+                            hit_direction = "left"
+                        
+                        if hit_direction:
+                            # Deal damage based on ability
+                            enemy['health'] -= ability_damage
+                            enemy['flash_time'] = pygame.time.get_ticks()  # Start white flash
+                            
+                            # Calculate knockback direction (away from player)
+                            dx = enemy['x'] - (x - cam_x)  # World coordinates
+                            dy = enemy['y'] - (y - cam_y)
+                            distance = max(1, (dx**2 + dy**2)**0.5)  # Prevent division by zero
+                            
+                            # Apply knockback with ability-specific multiplier
+                            final_knockback = knockback_strength * ability_knockback
+                            enemy['knockback_x'] = (dx / distance) * final_knockback
+                            enemy['knockback_y'] = (dy / distance) * final_knockback
+                            
+                            # Set attack animation
+                            if current_ability == "wind":
+                                w_attack = hit_direction
+                            elif current_ability == "fire":
+                                f_attack = hit_direction
+                            elif current_ability == "earth":
+                                e_attack = hit_direction
+                            elif current_ability == "water":
+                                a_attack = hit_direction
+                            animation_time = pygame.time.get_ticks()
+                            player_attack_sounds()
+                            
+                            # Print damage info
+                            if debug == True:
+                                print(f"{current_ability.capitalize()} attack Damage: {ability_damage}, Health: {enemy['health']}/{enemy['max_health']}")
+                                                        
+                            # Mark for removal if health <= 0
+                            if enemy['health'] <= 0:
+                                enemies_to_remove.append(i)
+                                if debug == True:
+                                    print(f"Enemy defeated by {current_ability}!")
+                    
+                    # Remove defeated enemies (from back to front to avoid index issues)
+                    for i in reversed(enemies_to_remove):
+                        del enemies[i]
 
-    #draw the tilemap
+    # draw the tilemap
     for img, px, py in scaled_tiles:
         win.blit(img, (px + cam_x, py + cam_y))
-    #win.blit(vignette, (0, 0))
-    #applies a rectangle to the player
+    # win.blit(vignette, (0, 0))
+    # applies a rectangle to the player
     player_front_rect = player_front.get_rect(topleft=(x, y))
-    #draw sprites
+    # draw sprites
     player_rect = player_front.get_rect(topleft=(x, y))
     win.blit(player_front, (x, y))
-
-    # Update attack rectangles to follow player position
-    attack_rect_r.topleft = (x + sprite_width/2, y - sprite_height/2)
-    attack_rect_l.topleft = (x - 45, y - sprite_height/2)
-
-    pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
-    pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
-
-
 
 
 
@@ -441,69 +622,120 @@ while done:
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
-    #displays the diff tombs to the screen
+    # displays the diff tombs to the screen with unique sprites
     if wind_tomb:
-        win.blit(tomb, (tombs[0] + cam_x, tombs[1]+ cam_y))
-        tomb.get_rect()
+        win.blit(wind_tomb_sprite, (tombs[0] + cam_x, tombs[1]+ cam_y))
     if fire_tomb:
-        win.blit(tomb, (tombs[2] + cam_x, tombs[3] + cam_y))
+        win.blit(fire_tomb_sprite, (tombs[2] + cam_x, tombs[3] + cam_y))
     if earth_tomb:
-        win.blit(tomb, (tombs[4] + cam_x, tombs[5] + cam_y))
+        win.blit(earth_tomb_sprite, (tombs[4] + cam_x, tombs[5] + cam_y))
     if water_tomb:
-        win.blit(tomb, (tombs[6] + cam_x, tombs[7] + cam_y))
+        win.blit(water_tomb_sprite, (tombs[6] + cam_x, tombs[7] + cam_y))
 
-    # draw enemies
-    for i in range(0, len(enemies), 2):
-        win.blit(enemy_sprite, (enemies[i] + cam_x, enemies[i + 1] + cam_y))
-
-    # move enemies towards player (only if within follow radius)
-    for i in range(0, len(enemies), 2):
-        enemy_x = enemies[i] + cam_x
-        enemy_y = enemies[i + 1] + cam_y
+    # Update and draw enemies with health, knockback, and flash effects
+    current_time = pygame.time.get_ticks()
+    
+    for enemy in enemies:
+        # Apply knockback (gradually reduce it)
+        enemy['x'] += enemy['knockback_x'] * dt
+        enemy['y'] += enemy['knockback_y'] * dt
+        enemy['knockback_x'] *= 0.85  # Reduce knockback over time
+        enemy['knockback_y'] *= 0.85
         
-        # simple distance check
-        x_distance = abs(x - enemy_x)
-        y_distance = abs(y - enemy_y)
+        # Convert to screen coordinates
+        enemy_screen_x = enemy['x'] + cam_x
+        enemy_screen_y = enemy['y'] + cam_y
         
-        # only move if close enough (simple rectangle check)
-        if x_distance < follow_radius and y_distance < follow_radius:
-            # Store original position before moving
-            original_x = enemies[i]
-            original_y = enemies[i + 1]
+        # Check distance to player for movement
+        x_distance = abs(x - enemy_screen_x)
+        y_distance = abs(y - enemy_screen_y)
+        
+        # Move towards player if within follow radius and knockback is minimal
+        if (x_distance < follow_radius and y_distance < follow_radius and 
+            abs(enemy['knockback_x']) < 5 and abs(enemy['knockback_y']) < 5):
+            
+            # Store original position for collision checking
+            original_x = enemy['x']
+            original_y = enemy['y']
             
             # Move enemy towards player
-            if x > enemy_x:
-                enemies[i] += enemy_speed * dt
-            if x < enemy_x:
-                enemies[i] -= enemy_speed * dt
-            if y > enemy_y:
-                enemies[i + 1] += enemy_speed * dt
-            if y < enemy_y:
-                enemies[i + 1] -= enemy_speed * dt
+            if x > enemy_screen_x:
+                enemy['x'] += enemy_speed * dt
+            elif x < enemy_screen_x:
+                enemy['x'] -= enemy_speed * dt
+            if y > enemy_screen_y:
+                enemy['y'] += enemy_speed * dt
+            elif y < enemy_screen_y:
+                enemy['y'] -= enemy_speed * dt
             
-            # Check for fence collision
-            enemy_rect = pygame.Rect(enemies[i], enemies[i + 1], sprite_width, sprite_height)
-            enemy_hit_fence = False
-            
+            # Check fence collision
+            enemy_rect = pygame.Rect(enemy['x'], enemy['y'], sprite_width, sprite_height)
             for fence in fence_rects:
                 if enemy_rect.colliderect(fence):
-                    enemy_hit_fence = True
+                    # Revert to original position
+                    enemy['x'] = original_x
+                    enemy['y'] = original_y
                     break
+        
+        # Create enemy sprite (white flash effect)
+        enemy_surface = enemy_sprite.copy()
+        if current_time - enemy['flash_time'] < 200:  # Flash for 200ms
+            # Create white flash effect
+            white_surface = pygame.Surface(enemy_surface.get_size())
+            white_surface.fill((255, 255, 255))
+            white_surface.set_alpha(180)  # Semi-transparent white
+            enemy_surface.blit(white_surface, (0, 0), special_flags=pygame.BLEND_ADD)
+        
+        # Draw enemy
+        win.blit(enemy_surface, (enemy_screen_x, enemy_screen_y))
+        
+        # Draw health bar above enemy 
+        if enemy['health'] < enemy['max_health']:
+            bar_width = 30
+            bar_height = 5
+            bar_x = enemy_screen_x + (sprite_width - bar_width) // 2
+            bar_y = enemy_screen_y - 8
             
-            # If enemy hit fence, move back to original position
-            if enemy_hit_fence:
-                enemies[i] = original_x
-                enemies[i + 1] = original_y
+            # Background (red)
+            pygame.draw.rect(win, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+            # Health (green)
+            health_width = int((enemy['health'] / enemy['max_health']) * bar_width)
+            pygame.draw.rect(win, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
+    
+    # Check if wind attack animation should be hidden after 1 second
+    if w_attack == "left" and current_time - animation_time > 1000:
+        w_attack = None
+    if w_attack == "right" and current_time - animation_time > 1000:
+        w_attack = None
+    
+    # Fire attack timeout
+    if f_attack == "left" and current_time - animation_time > 1000:
+        f_attack = None
+    if f_attack == "right" and current_time - animation_time > 1000:
+        f_attack = None
+    
+    # Earth attack timeout
+    if e_attack == "left" and current_time - animation_time > 1000:
+        e_attack = None
+    if e_attack == "right" and current_time - animation_time > 1000:
+        e_attack = None
+    
+    # Water attack timeout
+    if a_attack == "left" and current_time - animation_time > 1000:
+        a_attack = None
+    if a_attack == "right" and current_time - animation_time > 1000:
+        a_attack = None
 
     # Check collision with enemies
-    current_time = pygame.time.get_ticks()
-    for i in range(0, len(enemies), 2):
-        enemy_screen_x = enemies[i] + cam_x
-        enemy_screen_y = enemies[i + 1] + cam_y
+    for i, enemy in enumerate(enemies):
+        enemy_screen_x = enemy['x'] + cam_x
+        enemy_screen_y = enemy['y'] + cam_y
         if (enemy_screen_x - 20) <= x <= (enemy_screen_x + 20) and (enemy_screen_y - 20) <= y <= (enemy_screen_y + 20):
             # Only print if at least 1 second has passed since last hit
             if current_time - last_enemy_hit_time > 1000:
-                print(f"Hit by enemy {i//2 + 1}!")
+                if debug == True:
+                    print(f"Hit by enemy {i + 1}!")
+                player_health -= 1
                 last_enemy_hit_time = current_time
 
     for fence in fence_rects:
@@ -514,7 +746,7 @@ while done:
 
 
 
-    #tome collision
+    # tome collision
     if collide == True:
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             cam_y -= vel * dt
@@ -527,9 +759,9 @@ while done:
         collide = False
    
 
-    #movement code
-    #moves character for as long as the key gets held down in whatever direction i choose
-    #set up a list to do this
+    # movement code
+    # moves character for as long as the key gets held down in whatever direction i choose
+    # set up a list to do this
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP] and collide == False or keys[pygame.K_w] and collide == False:
@@ -547,17 +779,20 @@ while done:
     if keys[pygame.K_ESCAPE]:
         show_main_menu()
        
-    if debug == True: #debug menu
+    if debug == True: # debug menu
         for rect in fence_rects:
             fence_screen_rect = rect.move(cam_x, cam_y)
             pygame.draw.rect(win, (255, 255, 255), fence_screen_rect, 2)
         # Draw enemy positions and follow radius
-        for i in range(0, len(enemies), 2):
-            enemy_x = enemies[i] + cam_x
-            enemy_y = enemies[i + 1] + cam_y
+        for enemy in enemies:
+            enemy_x = enemy['x'] + cam_x
+            enemy_y = enemy['y'] + cam_y
             pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, sprite_width, sprite_height), 2)
             pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + sprite_width/2), int(enemy_y + sprite_height/2)), follow_radius, 1)
+        pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
+        pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
 
+    # ui
     if abilitys_picked == 0:
         win.blit(empty_ui, (0, 0))
     if abilitys_picked == 1:
@@ -576,6 +811,81 @@ while done:
         win.blit(water, (156, 6))
     if "earth" in abilitys:
         win.blit(earth, (231, 6))
+    
+    # Display current ability stats
+    if abilitys_picked > 0:
+        ability_names = ["", "wind", "fire", "water", "earth"]
+        if abilitys_picked <= 4:
+            current_ability_name = ability_names[abilitys_picked]
+            if current_ability_name in abilitys and current_ability_name in ability_stats:
+                stats = ability_stats[current_ability_name]
+                font_small = pygame.font.SysFont(None, 25)
+                
+                # Display ability info
+                ability_text = font_small.render(f"{current_ability_name.upper()}: DMG {stats['damage']} | KB {stats['knockback_multiplier']}x", True, (0, 0, 0))
+                win.blit(ability_text, (10, screen_height - 25))
+    
+
+
+    # Current health (green)
+    if player_health > 0:
+        # Draw hearts for each health point with spacing
+        heart_spacing = 3  # Space between hearts
+        for i in range(player_health):
+            x_pos = screen_width - (heart_width + heart_spacing) * (i + 1)
+            win.blit(heart, (x_pos, 0))
+    if player_health <= 0:
+        restart_signal = game_over()
+        if restart_signal == "restart":
+            # Force difficulty selection on restart
+            diff_menu()  # Call difficulty menu directly
+            
+            # Update difficulty and related variables after menu selection
+            current_difficulty = difficulty_settings.get(difficulty, {})
+            num_enemies = current_difficulty[0]
+            enemy_speed = current_difficulty[1]
+            follow_radius = current_difficulty[2]
+            enemy_max_health = current_difficulty[3]
+            knockback_strength = current_difficulty[4]
+            player_max_health = current_difficulty[5]
+            
+            # Reset all game variables for restart
+            player_health = player_max_health
+
+
+            # Reset player position and camera
+            x = screen_width / 2
+            y = screen_height / 2
+            cam_x = 0
+            cam_y = 0
+
+            # Reset abilities and tombs
+            abilitys.clear()
+            abilitys_picked = 0
+            wind_tomb = True
+            fire_tomb = True
+            earth_tomb = True
+            water_tomb = True
+            w_attack = None
+            f_attack = None
+            e_attack = None
+            a_attack = None
+            
+            # Reset enemies with new difficulty settings
+            enemies.clear()
+            for i in range(num_enemies):
+                if i < len(enemy_spawn_points):
+                    enemies.append({
+                        'x': enemy_spawn_points[i][0],
+                        'y': enemy_spawn_points[i][1], 
+                        'health': enemy_max_health,
+                        'max_health': enemy_max_health,
+                        'flash_time': 0,
+                        'knockback_x': 0,
+                        'knockback_y': 0
+                    })
+            
+            print(f"Game restarted with difficulty: {difficulty}")
     if player_rect.colliderect(wind_tomb_rect):
         if keys[pygame.K_b] and "wind" not in abilitys:
             wind_tomb = False
@@ -592,8 +902,33 @@ while done:
         if keys[pygame.K_b] and "water" not in abilitys:
             water_tomb = False
             abilitys.append("water")
-    #update the display
+
+    # Display wind attack animations
+    if w_attack == "left":
+        win.blit(player_wind_left, (x - 50, y - 5))
+    if w_attack == "right":
+        win.blit(pygame.transform.flip(player_wind_left, True, False), (x, y - 5))
+    
+    # Fire attack animations
+    if f_attack == "left":
+        win.blit(player_fire_left, (x - 50, y - 5))
+    if f_attack == "right":
+        win.blit(pygame.transform.flip(player_fire_left, True, False), (x, y - 5))
+    
+    # Earth attack animations
+    if e_attack == "left":
+        win.blit(player_earth_left, (x - 50, y - 5))
+    if e_attack == "right":
+        win.blit(pygame.transform.flip(player_earth_left, True, False), (x, y - 5))
+    
+    # Water attack animations
+    if a_attack == "left":
+        win.blit(player_water_left, (x - 50, y - 5))
+    if a_attack == "right":
+        win.blit(pygame.transform.flip(player_water_left, True, False), (x, y - 5))
+        
+    # update the display
     pygame.display.update()
 
-pygame.quit() #quit the game
+pygame.quit() # quit the game
 exit()
