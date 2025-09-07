@@ -44,21 +44,6 @@ sprite_width = 27
 sprite_height = 44
 
 
-# width and height for the hitbox of the sprite
-tsprite_hbw = 25
-tsprite_hbh = 4
-
-lsprite_hbw = 4
-lsprite_hbh = 42
-
-dsprite_hbw = 25
-dsprite_hbh = 4
-
-rsprite_hbw = 4
-rsprite_hbh = 42
-
-# Load player sprite
-
 scale = 2  # changes the scale 1=defalt
 scaled_tiles = [] # the coordanets and image gets saved in this list
 fence_rects = []
@@ -78,12 +63,23 @@ for layer in tmx_data.visible_layers:
 
                 # If it's the fence layer, store its rect (relative to map, not screen)
                 if layer.name == "fences":
-                    fence_rects.append(pygame.Rect(tile_x, tile_y, tmx_data.tilewidth * scale, tmx_data.tileheight * scale))
+                    # Create smaller fence hitboxes (half size, centered)
+                    fence_width = (tmx_data.tilewidth * scale) // 1.5
+                    fence_height = (tmx_data.tileheight * scale) // 1.5
+                    fence_x = tile_x + ((tmx_data.tilewidth * scale) - fence_width) // 1.5
+                    fence_y = tile_y + ((tmx_data.tileheight * scale) - fence_height) // 2
+                    fence_rects.append(pygame.Rect(fence_x, fence_y, fence_width, fence_height))
 
 
 # set the co-ordinates of where the sprite will appear and its hight/width
 x = screen_width / 2
 y = screen_height / 2
+hitbox_width = sprite_width // 2    # 27 // 2 = 13 pixels wide
+hitbox_height = sprite_height // 2 - 10  # 44 // 2 = 22 pixels tall
+
+# Center the hitbox within the sprite
+hitbox_x = x + (sprite_width - hitbox_width) // 2   # Center horizontally
+hitbox_y = y + (hitbox_height *2) # Center vertically
 
 # Load player sprite's
 player_front_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')# finds the player path
@@ -125,6 +121,12 @@ player_water_left_load = pygame.image.load(player_water_left_path).convert_alpha
 water_animation_width, water_animation_height = player_water_left_load.get_size()
 player_water_left = pygame.transform.scale(player_water_left_load, (water_animation_width * 2, water_animation_height * 2))
 
+# Load death sprite
+death_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'deathR.png')
+death_left_load = pygame.image.load(death_left_path).convert_alpha()
+death_width, death_hight = death_left_load.get_size()
+death_left = pygame.transform.scale(death_left_load, (death_width/4, death_hight/4))
+
 # uis
 ui_1_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'ui_1.png')
 ui_1 = pygame.image.load(ui_1_path).convert_alpha()
@@ -139,9 +141,9 @@ wind_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'w
 wind = pygame.image.load(wind_path).convert_alpha()
 fire_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'fire.png')
 fire = pygame.image.load(fire_path).convert_alpha()
-earth_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'fire.png')
+earth_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'earth.png')
 earth = pygame.image.load(earth_path).convert_alpha()
-water_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'fire.png')
+water_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'water.png')
 water = pygame.image.load(water_path).convert_alpha()
 empty_ui_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'empty_ui.png')
 empty_ui = pygame.image.load(empty_ui_path).convert_alpha()
@@ -149,8 +151,8 @@ empty_ui = pygame.image.load(empty_ui_path).convert_alpha()
 heart_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'heart_64x64.png')
 heart = pygame.image.load(heart_path).convert_alpha()
 heart_width, heart_height = heart.get_size()
-
-
+dead_heart_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'dead_heart_64x64.png')
+dead_heart = pygame.image.load(dead_heart_path).convert_alpha()
 # put a rectangle around the player for hitboxes
 player_rect = player_front.get_rect(topleft=(x, y))
 
@@ -163,19 +165,60 @@ water_tomb_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', '
 wind_tomb_load = pygame.image.load(wind_tomb_path).convert_alpha()
 wind_tomb_sprite = pygame.transform.scale(wind_tomb_load, (21*2+8, 29*2+8))
 fire_tomb_load = pygame.image.load(fire_tomb_path).convert_alpha()
-fire_tomb_sprite = pygame.transform.scale(fire_tomb_load, (84.25, 68.5))
+fire_tomb_sprite = pygame.transform.scale(fire_tomb_load, (271/5, 344/5))
 earth_tomb_load = pygame.image.load(earth_tomb_path).convert_alpha()
 earth_tomb_sprite = pygame.transform.scale(earth_tomb_load, (24*2, 32*2))
 water_tomb_load = pygame.image.load(water_tomb_path).convert_alpha()
-water_tomb_sprite = pygame.transform.scale(water_tomb_load, (84.25, 68.5))
+water_tomb_width, water_tomb_hight = water_tomb_load.get_size()
+water_tomb_sprite = pygame.transform.scale(water_tomb_load, (water_tomb_width/5, water_tomb_hight/5))
 
+#load walls
+side_wall_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'wall_side.png')
+flat_wall_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'wall_bottom.png')
+side_wall_load = pygame.image.load(side_wall_path).convert_alpha()
+flat_wall_load = pygame.image.load(flat_wall_path).convert_alpha()
+flat_wall_width, flat_wall_hight = flat_wall_load.get_size()
+side_wall_width, side_wall_hight = side_wall_load.get_size()
+side_wall = pygame.transform.scale(side_wall_load, (side_wall_width*4, side_wall_hight*4))
+flat_wall = pygame.transform.scale(flat_wall_load, (flat_wall_width*4, flat_wall_hight*4))
 
 tombs = [90, 50, 200, 150, 300, 300, 80, 90]
 
+# Wall system - list of wall positions and types
+# Each wall entry: [x, y, wall_type] where wall_type is "side" or "flat"
+wall_locations = [
+    [80, 80, "side"],     # side wall at position (80, 80)
+    [100, 100, "flat"],   # flat wall at position (100, 100)
+    [200, 150, "side"],   # add more walls as needed
+    [300, 200, "flat"],
+    [400, 100, "side"],
+]
+
+# Create wall rectangles for collision detection
+wall_rects = []
+for wall_data in wall_locations:
+    wall_x, wall_y, wall_type = wall_data
+    if wall_type == "side":
+        wall_width = side_wall_width * 4
+        wall_height = side_wall_hight * 4
+    else:  # flat wall
+        wall_width = flat_wall_width * 4
+        wall_height = flat_wall_hight * 4
+    
+    wall_rects.append({
+        'rect': pygame.Rect(wall_x, wall_y, wall_width, wall_height),
+        'type': wall_type,
+        'x': wall_x,
+        'y': wall_y
+    })
+
 # load enemys
-enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'player_front.png')
+enemy_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'Efront.png')
 enemy_load = pygame.image.load(enemy_path).convert_alpha()
-enemy_sprite = pygame.transform.scale(enemy_load, (sprite_width, sprite_height))
+# Set custom enemy dimensions (change these values to resize enemies)
+enemy_width = 35  # Make enemies wider than player (was 27)
+enemy_height = 50  # Make enemies taller than player (was 44)
+enemy_sprite = pygame.transform.scale(enemy_load, (enemy_width, enemy_height))
 
 
 # set velocity to control the speed of the sprite
@@ -554,7 +597,7 @@ while done:
                         # Convert enemy world coordinates to screen coordinates
                         enemy_screen_x = enemy['x'] + cam_x
                         enemy_screen_y = enemy['y'] + cam_y
-                        enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, sprite_width, sprite_height)
+                        enemy_rect = pygame.Rect(enemy_screen_x, enemy_screen_y, enemy_width, enemy_height)
                         
                         hit_direction = None
                         # Check for collision with attack rectangles
@@ -609,19 +652,38 @@ while done:
         win.blit(img, (px + cam_x, py + cam_y))
     # win.blit(vignette, (0, 0))
     # applies a rectangle to the player
-    player_front_rect = player_front.get_rect(topleft=(x, y))
     # draw sprites
-    player_rect = player_front.get_rect(topleft=(x, y))
+
+    # Create the custom hitbox
+    player_rect = pygame.Rect(hitbox_x, hitbox_y, hitbox_width, hitbox_height)
     win.blit(player_front, (x, y))
 
-
-
+    # Draw all walls from the wall_locations list
+    for wall_data in wall_locations:
+        wall_x, wall_y, wall_type = wall_data
+        if wall_type == "side":
+            win.blit(side_wall, (wall_x + cam_x, wall_y + cam_y))
+        else:  # flat wall
+            win.blit(flat_wall, (wall_x + cam_x, wall_y + cam_y))
     # Create tomb rectangles for collision detection
     wind_tomb_rect = pygame.Rect(tombs[0] + cam_x, tombs[1] + cam_y, 84, 68)
     fire_tomb_rect = pygame.Rect(tombs[2] + cam_x, tombs[3] + cam_y, 84, 68)
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
+    # Check wall collisions
+    for wall in wall_rects:
+        # Adjust wall position by camera offset for collision detection
+        wall_screen_rect = wall['rect'].move(cam_x, cam_y)
+        if player_rect.colliderect(wall_screen_rect):
+            collide = True
+
+    # Check fence collisions
+    for fence in fence_rects:
+        # Adjust fence position by camera offset for collision detection
+        fence_screen_rect = fence.move(cam_x, cam_y)
+        if player_rect.colliderect(fence_screen_rect):
+            collide = True
     # displays the diff tombs to the screen with unique sprites
     if wind_tomb:
         win.blit(wind_tomb_sprite, (tombs[0] + cam_x, tombs[1]+ cam_y))
@@ -668,14 +730,25 @@ while done:
             elif y < enemy_screen_y:
                 enemy['y'] -= enemy_speed * dt
             
-            # Check fence collision
-            enemy_rect = pygame.Rect(enemy['x'], enemy['y'], sprite_width, sprite_height)
+
+            enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy_width, enemy_height)
+            collision_detected = False
+            
             for fence in fence_rects:
                 if enemy_rect.colliderect(fence):
-                    # Revert to original position
-                    enemy['x'] = original_x
-                    enemy['y'] = original_y
+                    collision_detected = True
                     break
+                        # Check wall collision
+            if not collision_detected:
+                for wall in wall_rects:
+                    if enemy_rect.colliderect(wall['rect']):
+                        collision_detected = True
+                        break
+                    
+            if collision_detected:
+                # Revert to original position
+                enemy['x'] = original_x
+                enemy['y'] = original_y
         
         # Create enemy sprite (white flash effect)
         enemy_surface = enemy_sprite.copy()
@@ -693,7 +766,7 @@ while done:
         if enemy['health'] < enemy['max_health']:
             bar_width = 30
             bar_height = 5
-            bar_x = enemy_screen_x + (sprite_width - bar_width) // 2
+            bar_x = enemy_screen_x + (enemy_width - bar_width) // 2
             bar_y = enemy_screen_y - 8
             
             # Background (red)
@@ -780,17 +853,29 @@ while done:
         show_main_menu()
        
     if debug == True: # debug menu
+        pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
+        pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
+        
+        # Draw fence hitboxes
         for rect in fence_rects:
             fence_screen_rect = rect.move(cam_x, cam_y)
             pygame.draw.rect(win, (255, 255, 255), fence_screen_rect, 2)
+        
+        # Draw wall hitboxes
+        for wall in wall_rects:
+            wall_screen_rect = wall['rect'].move(cam_x, cam_y)
+            pygame.draw.rect(win, (0, 255, 255), wall_screen_rect, 2)  # Cyan for walls
+        
+        win.blit(player_front, (x,y))
+        # Draw the player's hitbox for debugging/visualization
+        pygame.draw.rect(win, (0, 255, 0), player_rect, 2)
         # Draw enemy positions and follow radius
         for enemy in enemies:
             enemy_x = enemy['x'] + cam_x
             enemy_y = enemy['y'] + cam_y
-            pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, sprite_width, sprite_height), 2)
-            pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + sprite_width/2), int(enemy_y + sprite_height/2)), follow_radius, 1)
-        pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
-        pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
+            pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, enemy_width, enemy_height), 2)
+            pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + enemy_width/2), int(enemy_y + enemy_height/2)), follow_radius, 1)
+
 
     # ui
     if abilitys_picked == 0:
@@ -829,11 +914,16 @@ while done:
 
     # Current health (green)
     if player_health > 0:
-        # Draw hearts for each health point with spacing
+        # Draw dead hearts for max health
         heart_spacing = 3  # Space between hearts
+        for i in range(player_max_health):
+            x_pos = screen_width - (heart_width + heart_spacing) * (i + 1)
+            win.blit(dead_heart, (x_pos, 0))
+        # Draw live hearts for current health
         for i in range(player_health):
             x_pos = screen_width - (heart_width + heart_spacing) * (i + 1)
             win.blit(heart, (x_pos, 0))
+
     if player_health <= 0:
         restart_signal = game_over()
         if restart_signal == "restart":
@@ -917,16 +1007,16 @@ while done:
     
     # Earth attack animations
     if e_attack == "left":
-        win.blit(player_earth_left, (x - 50, y - 5))
+        win.blit(player_earth_left, (x - 90, y - 5))
     if e_attack == "right":
-        win.blit(pygame.transform.flip(player_earth_left, True, False), (x, y - 5))
+        win.blit(pygame.transform.flip(player_earth_left, True, False), (x - 5, y - 5))
     
     # Water attack animations
     if a_attack == "left":
-        win.blit(player_water_left, (x - 50, y - 5))
+        win.blit(player_water_left, (x - 60, y - 5))
     if a_attack == "right":
-        win.blit(pygame.transform.flip(player_water_left, True, False), (x, y - 5))
-        
+        win.blit(pygame.transform.flip(player_water_left, True, False), (x - 5, y - 5))
+    win.blit(death_left, (0,0))
     # update the display
     pygame.display.update()
 
