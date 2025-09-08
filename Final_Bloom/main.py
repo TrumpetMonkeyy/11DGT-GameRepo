@@ -121,12 +121,6 @@ player_water_left_load = pygame.image.load(player_water_left_path).convert_alpha
 water_animation_width, water_animation_height = player_water_left_load.get_size()
 player_water_left = pygame.transform.scale(player_water_left_load, (water_animation_width * 2, water_animation_height * 2))
 
-# Load death sprite
-death_left_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'deathR.png')
-death_left_load = pygame.image.load(death_left_path).convert_alpha()
-death_width, death_hight = death_left_load.get_size()
-death_left = pygame.transform.scale(death_left_load, (death_width/4, death_hight/4))
-
 # uis
 ui_1_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'ui', 'ui_1.png')
 ui_1 = pygame.image.load(ui_1_path).convert_alpha()
@@ -1016,7 +1010,6 @@ while done:
         win.blit(player_water_left, (x - 60, y - 5))
     if a_attack == "right":
         win.blit(pygame.transform.flip(player_water_left, True, False), (x - 5, y - 5))
-    win.blit(death_left, (0,0))
     # update the display
     pygame.display.update()
 
