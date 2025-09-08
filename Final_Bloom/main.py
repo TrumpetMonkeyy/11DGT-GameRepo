@@ -530,9 +530,14 @@ w_attack = None
 f_attack = None
 e_attack = None
 a_attack = None
+
 # allow the tilemap to move with the player
-cam_x = 0
-cam_y = 0
+#starting pos
+# Positive cam_x moves the map left (player appears to start more to the right)
+# Positive cam_y moves the map up (player appears to start more down)
+# Negative values do the opposite
+cam_x = -82
+cam_y = -1224
 
 last_enemy_hit_time = 0 # the time when the enemy hit the player last
 animation_time = 0
@@ -847,6 +852,11 @@ while done:
         show_main_menu()
        
     if debug == True: # debug menu
+        # Display FPS in debug mode
+        fps = clock.get_fps()
+        font = pygame.font.Font(None, 36)
+        fps_text = font.render(f"FPS: {fps:.1f}", True, (20, 20, 20))
+        
         pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
         pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
         
@@ -869,7 +879,11 @@ while done:
             enemy_y = enemy['y'] + cam_y
             pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, enemy_width, enemy_height), 2)
             pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + enemy_width/2), int(enemy_y + enemy_height/2)), follow_radius, 1)
-
+        
+        win.blit(fps_text, (500, 30))
+        # Display camera coordinates (this shows actual movement)
+        cam_text = font.render(f"Camera: X:{int(cam_x)}, Y:{int(cam_y)}", True, (20, 20, 20))
+        win.blit(cam_text, (500, 50))
 
     # ui
     if abilitys_picked == 0:
@@ -940,8 +954,8 @@ while done:
             # Reset player position and camera
             x = screen_width / 2
             y = screen_height / 2
-            cam_x = 0
-            cam_y = 0
+            cam_x = 0      # Reset to starting position - change this to match your desired starting position
+            cam_y = 0      # Reset to starting position - change this to match your desired starting position
 
             # Reset abilities and tombs
             abilitys.clear()
