@@ -7,6 +7,7 @@ import os
 import sys
 import pygame
 import pytmx
+import random
 from pytmx.util_pygame import load_pygame
 
 
@@ -216,6 +217,14 @@ enemy_width = 35  # Make enemies wider than player (was 27)
 enemy_height = 50  # Make enemies taller than player (was 44)
 enemy_sprite = pygame.transform.scale(enemy_load, (enemy_width, enemy_height))
 
+# load boss sprite
+boss_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'boss.png')
+boss_load = pygame.image.load(boss_path).convert_alpha()
+boss_width, boss_height = boss_load.get_size()
+boss_width *= 2
+boss_height *= 2
+boss_sprite = pygame.transform.scale(boss_load, (boss_width, boss_height))
+
 
 # set velocity to control the speed of the sprite
 vel = 200
@@ -240,6 +249,16 @@ def player_attack_sounds():
 # abilitys
 abilitys = []
 abilitys_picked = 0
+
+# Konami Code for God Mode
+# Sequence: UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, A, B
+konami_sequence = [
+    pygame.K_UP, pygame.K_UP, pygame.K_DOWN, pygame.K_DOWN,
+    pygame.K_LEFT, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT,
+    pygame.K_a, pygame.K_b
+]
+konami_progress = 0  # Track progress through the sequence
+god_mode = False  # God mode flag
 
 
 # difficultys
@@ -482,6 +501,49 @@ def game_over():
        
         pygame.display.update()
 
+def game_win():
+    # title
+    pygame.display.set_caption("Victory!")
+
+    bg_trans_path = os.path.join(os.path.dirname(__file__), 'assets', 'images', 'transparent_background.png')
+    bg_trans = pygame.image.load(bg_trans_path).convert_alpha()
+
+    small_font = pygame.font.SysFont(None, 36)
+
+    help_text = small_font.render("Congratulations! You have defeated the Final Boss!", True, (255, 215, 0))  # Gold
+    help_text_rect = help_text.get_rect(center=(screen_width // 2, screen_height // 2 - 80))
+    help_text1 = small_font.render("New Zealand has been saved from 'Hine-nui-te-pō'!", True, (255, 255, 255))
+    help_text1_rect = help_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 40))
+    info_text1 = small_font.render("To play again press 'R',", True, (255, 255, 255))
+    info_text_rect1 = info_text1.get_rect(center=(screen_width // 2, screen_height // 2))
+    info_text2 = small_font.render("or press 'Esc' to quit", True, (255, 255, 255))
+    info_text_rect2 = info_text2.get_rect(center=(screen_width // 2, screen_height // 2 + 40))
+
+    while True:
+        clock.tick(60)
+        for img, px, py in scaled_tiles:
+            win.blit(img, (px, py))
+        win.blit(bg_trans, (0, 0))
+
+        win.blit(help_text, help_text_rect)
+        win.blit(help_text1, help_text1_rect)
+        win.blit(info_text1, info_text_rect1)
+        win.blit(info_text2, info_text_rect2)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+           
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            return "restart"
+        if keys[pygame.K_ESCAPE]:
+            pygame.quit()
+            sys.exit()
+       
+        pygame.display.update()
+
 
 show_main_menu() # runs the start menu before the game runs
 # enemy settings
@@ -559,6 +621,102 @@ f_attack = None
 e_attack = None
 a_attack = None
 
+# Boss system variables
+boss = None
+boss_mode = 0  # 0 = no boss, 1 = first mode, 2 = second mode, 3 = third mode
+boss_spawn_location = [1000, 1000]  # Where boss spawns
+boss_last_dash_time = 0
+boss_power_steal_timer = 0
+game_won = False  # Win condition
+
+# Boss functions
+def spawn_boss_mode_1():
+    global boss, boss_mode
+    boss_mode = 1
+    boss = {
+        'x': boss_spawn_location[0],
+        'y': boss_spawn_location[1],
+        'health': 30,
+        'max_health': 30,
+        'flash_time': 0,
+        'knockback_x': 0,
+        'knockback_y': 0,
+        'follow_radius': 400,
+        'speed': 80,
+        'damage': 2
+    }
+
+def spawn_boss_mode_2():
+    global boss, boss_mode, boss_last_dash_time
+    boss_mode = 2
+    boss_last_dash_time = pygame.time.get_ticks()
+    boss = {
+        'x': boss_spawn_location[0],
+        'y': boss_spawn_location[1],
+        'health': 25,
+        'max_health': 25,
+        'flash_time': 0,
+        'knockback_x': 0,
+        'knockback_y': 0,
+        'follow_radius': 500,
+        'speed': 120,
+        'damage': 3
+    }
+
+def spawn_boss_mode_3():
+    global boss, boss_mode, boss_power_steal_timer
+    boss_mode = 3
+    boss_power_steal_timer = pygame.time.get_ticks()
+    boss = {
+        'x': boss_spawn_location[0],
+        'y': boss_spawn_location[1],
+        'health': 20,
+        'max_health': 20,
+        'flash_time': 0,
+        'knockback_x': 0,
+        'knockback_y': 0,
+        'follow_radius': 600,
+        'speed': 150,
+        'damage': 3
+    }
+
+def boss_dash_toward_player():
+    global boss
+    # Calculate direction to player
+    player_world_x = x - cam_x
+    player_world_y = y - cam_y
+    dx = player_world_x - boss['x']
+    dy = player_world_y - boss['y']
+    distance = max(1, (dx**2 + dy**2)**0.5)
+    
+    # Dash 100 pixels toward player
+    dash_distance = 100
+    boss['x'] += (dx / distance) * dash_distance
+    boss['y'] += (dy / distance) * dash_distance
+
+def steal_player_power():
+    global abilitys
+    if len(abilitys) > 1:  # Keep minimum of 1 (wind)
+        # Remove powers in order: fire, earth, water
+        if "fire" in abilitys:
+            abilitys.remove("fire")
+            if debug:
+                print("Boss stole Fire power!")
+        elif "earth" in abilitys:
+            abilitys.remove("earth")
+            if debug:
+                print("Boss stole Earth power!")
+        elif "water" in abilitys:
+            abilitys.remove("water")
+            if debug:
+                print("Boss stole Water power!")
+
+# Spawn the first boss when all enemies are defeated
+def check_spawn_boss():
+    global boss_mode
+    if len(enemies) == 0 and boss_mode == 0:
+        spawn_boss_mode_1()
+
 # allow the tilemap to move with the player
 # starting pos
 # Positive cam_x moves the map left (player appears to start more to the right)
@@ -569,6 +727,8 @@ cam_y = -1155
 
 last_enemy_hit_time = 0 # the time when the enemy hit the player last
 animation_time = 0
+player_knockback_x = 0  # Player knockback velocity
+player_knockback_y = 0
 while done:
     # allows key inputs to actually be able to do things
     keys = pygame.key.get_pressed()
@@ -580,6 +740,55 @@ while done:
     attack_rect_r.topleft = (x + sprite_width/2, y - sprite_height/2)
     attack_rect_l.topleft = (x - 45, y - sprite_height/2)
     
+    # Apply player knockback (move camera in opposite direction) with collision detection
+    if not god_mode and (abs(player_knockback_x) > 0.1 or abs(player_knockback_y) > 0.1):
+        # Store original camera position
+        original_cam_x = cam_x
+        original_cam_y = cam_y
+        
+        # Try to apply knockback
+        test_cam_x = cam_x - player_knockback_x
+        test_cam_y = cam_y - player_knockback_y
+        
+        # Check if knockback would cause collision
+        test_collision = False
+        
+        # Test wall collisions
+        for wall in wall_rects:
+            wall_has_collision = True
+            if wall['ability_requirement'] and wall['ability_requirement'] in abilitys:
+                wall_has_collision = False
+                
+            if wall_has_collision:
+                wall_screen_rect = wall['rect'].move(test_cam_x, test_cam_y)
+                if player_rect.colliderect(wall_screen_rect):
+                    test_collision = True
+                    break
+        
+        # Test fence collisions
+        if not test_collision:
+            for fence in fence_rects:
+                fence_screen_rect = fence.move(test_cam_x, test_cam_y)
+                if player_rect.colliderect(fence_screen_rect):
+                    test_collision = True
+                    break
+        
+        # Apply knockback only if no collision detected
+        if not test_collision:
+            cam_x = test_cam_x
+            cam_y = test_cam_y
+        else:
+            # Stop knockback if collision would occur
+            player_knockback_x = 0
+            player_knockback_y = 0
+    else:
+        # Apply knockback normally in god mode or when knockback is minimal
+        cam_x -= player_knockback_x
+        cam_y -= player_knockback_y
+    
+    player_knockback_x *= 0.8  # Reduce player knockback over time
+    player_knockback_y *= 0.8
+    
     # quit the game when the window gets closed
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -587,6 +796,24 @@ while done:
 
         # debug mode
         if event.type == pygame.KEYDOWN:
+            # Check for Konami code sequence
+            if event.key == konami_sequence[konami_progress]:
+                konami_progress += 1
+                if konami_progress >= len(konami_sequence):
+                    # Toggle god mode
+                    god_mode = not god_mode
+                    konami_progress = 0  # Reset sequence
+                    if god_mode:
+                        print("GOD MODE ACTIVATED! You are now invincible and can walk through walls!")
+                    else:
+                        print("God mode deactivated.")
+            else:
+                # Reset sequence if wrong key is pressed
+                konami_progress = 0
+                # Check if this key starts the sequence
+                if event.key == konami_sequence[0]:
+                    konami_progress = 1
+            
             if event.key == pygame.K_h and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                 debug = not debug
             # sets a verable that changes the ability you selected
@@ -634,8 +861,11 @@ while done:
                             hit_direction = "left"
                         
                         if hit_direction:
-                            # Deal damage based on ability
-                            enemy['health'] -= ability_damage
+                            # Deal damage based on ability (or instant kill in god mode)
+                            if god_mode:
+                                enemy['health'] = 0  # Instant kill in god mode
+                            else:
+                                enemy['health'] -= ability_damage
                             enemy['flash_time'] = pygame.time.get_ticks()  # Start white flash
                             
                             # Calculate knockback direction (away from player)
@@ -673,6 +903,75 @@ while done:
                     # Remove defeated enemies (from back to front to avoid index issues)
                     for i in reversed(enemies_to_remove):
                         del enemies[i]
+                    
+                    # Check boss attack
+                    if boss and boss_mode > 0:
+                        boss_screen_x = boss['x'] + cam_x
+                        boss_screen_y = boss['y'] + cam_y
+                        boss_rect = pygame.Rect(boss_screen_x, boss_screen_y, boss_width, boss_height)
+                        
+                        hit_direction = None
+                        if attack_rect_r.colliderect(boss_rect):
+                            hit_direction = "right"
+                        elif attack_rect_l.colliderect(boss_rect):
+                            hit_direction = "left"
+                        
+                        if hit_direction:
+                            # Deal damage to boss (or instant kill in god mode)
+                            if god_mode:
+                                boss['health'] = 0  # Instant kill in god mode
+                            else:
+                                boss['health'] -= ability_damage
+                            boss['flash_time'] = pygame.time.get_ticks()
+                            
+                            # Calculate knockback direction (away from player)
+                            dx = boss['x'] - (x - cam_x)
+                            dy = boss['y'] - (y - cam_y)
+                            distance = max(1, (dx**2 + dy**2)**0.5)
+                            
+                            # Apply knockback with ability-specific multiplier
+                            final_knockback = knockback_strength * ability_knockback
+                            boss['knockback_x'] = (dx / distance) * final_knockback
+                            boss['knockback_y'] = (dy / distance) * final_knockback
+                            
+                            # Set attack animation
+                            if current_ability == "wind":
+                                w_attack = hit_direction
+                            elif current_ability == "fire":
+                                f_attack = hit_direction
+                            elif current_ability == "earth":
+                                e_attack = hit_direction
+                            elif current_ability == "water":
+                                a_attack = hit_direction
+                            animation_time = pygame.time.get_ticks()
+                            player_attack_sounds()
+                            
+                            if debug:
+                                print(f"Boss Mode {boss_mode} - {current_ability.capitalize()} attack Damage: {ability_damage}, Health: {boss['health']}/{boss['max_health']}")
+                            
+                            # Check if boss mode should change
+                            if boss['health'] <= 0:
+                                if boss_mode == 1:
+                                    boss_spawn_location[0] = boss['x']  # Save current position
+                                    boss_spawn_location[1] = boss['y']
+                                    spawn_boss_mode_2()
+                                    if debug:
+                                        print("Boss Mode 2 activated!")
+                                elif boss_mode == 2:
+                                    boss_spawn_location[0] = boss['x']
+                                    boss_spawn_location[1] = boss['y']
+                                    spawn_boss_mode_3()
+                                    if debug:
+                                        print("Boss Mode 3 activated!")
+                                elif boss_mode == 3:
+                                    boss = None
+                                    boss_mode = 0
+                                    game_won = True
+                                    if debug:
+                                        print("Boss defeated! You win!")
+
+    # Check if boss should spawn
+    check_spawn_boss()
 
     # draw the tilemap
     for img, px, py in scaled_tiles:
@@ -706,25 +1005,26 @@ while done:
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
-    # Check wall collisions (only for visible walls)
+    # Check wall collisions (only for visible walls and not in god mode)
     for wall in wall_rects:
         # Check if wall should have collision (disappears when required ability is collected)
         wall_has_collision = True
         if wall['ability_requirement'] and wall['ability_requirement'] in abilitys:
             wall_has_collision = False  # Remove collision if player has the required ability
             
-        if wall_has_collision:
+        if wall_has_collision and not god_mode:  # No wall collision in god mode
             # Adjust wall position by camera offset for collision detection
             wall_screen_rect = wall['rect'].move(cam_x, cam_y)
             if player_rect.colliderect(wall_screen_rect):
                 collide = True
 
-    # Check fence collisions
-    for fence in fence_rects:
-        # Adjust fence position by camera offset for collision detection
-        fence_screen_rect = fence.move(cam_x, cam_y)
-        if player_rect.colliderect(fence_screen_rect):
-            collide = True
+    # Check fence collisions (skip in god mode)
+    if not god_mode:
+        for fence in fence_rects:
+            # Adjust fence position by camera offset for collision detection
+            fence_screen_rect = fence.move(cam_x, cam_y)
+            if player_rect.colliderect(fence_screen_rect):
+                collide = True
     # displays the diff tombs to the screen with unique sprites
     if wind_tomb:
         win.blit(wind_tomb_sprite, (tombs[0] + cam_x, tombs[1]+ cam_y))
@@ -739,9 +1039,41 @@ while done:
     current_time = pygame.time.get_ticks()
     
     for enemy in enemies:
+        # Store original position before applying knockback
+        original_x = enemy['x']
+        original_y = enemy['y']
+        
         # Apply knockback (gradually reduce it)
         enemy['x'] += enemy['knockback_x'] * dt
         enemy['y'] += enemy['knockback_y'] * dt
+        
+        # Check if knockback pushed enemy into walls/fences
+        enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy_width, enemy_height)
+        collision_detected = False
+        
+        # Check fence collision
+        for fence in fence_rects:
+            if enemy_rect.colliderect(fence):
+                collision_detected = True
+                break
+        
+        # Check wall collision
+        if not collision_detected:
+            for wall in wall_rects:
+                if 'ability_requirement' in wall and wall['ability_requirement'] in abilitys:
+                    continue  # Skip walls that should be gone
+                if enemy_rect.colliderect(wall['rect']):
+                    collision_detected = True
+                    break
+        
+        # If collision detected, revert to original position
+        if collision_detected:
+            enemy['x'] = original_x
+            enemy['y'] = original_y
+            # Stop knockback
+            enemy['knockback_x'] = 0
+            enemy['knockback_y'] = 0
+        
         enemy['knockback_x'] *= 0.85  # Reduce knockback over time
         enemy['knockback_y'] *= 0.85
         
@@ -819,6 +1151,144 @@ while done:
             health_width = int((enemy['health'] / enemy['max_health']) * bar_width)
             pygame.draw.rect(win, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
     
+    # Update and draw boss
+    if boss and boss_mode > 0:
+        # Store original position before applying knockback
+        original_boss_x = boss['x']
+        original_boss_y = boss['y']
+        
+        # Apply knockback (gradually reduce it)
+        boss['x'] += boss['knockback_x'] * dt
+        boss['y'] += boss['knockback_y'] * dt
+        
+        # Check if knockback pushed boss into walls/fences
+        boss_rect = pygame.Rect(boss['x'], boss['y'], boss_width, boss_height)
+        collision_detected = False
+        
+        # Check fence collision
+        for fence in fence_rects:
+            if boss_rect.colliderect(fence):
+                collision_detected = True
+                break
+        
+        # Check wall collision
+        if not collision_detected:
+            for wall in wall_rects:
+                if 'ability_requirement' in wall and wall['ability_requirement'] in abilitys:
+                    continue  # Skip walls that should be gone
+                if boss_rect.colliderect(wall['rect']):
+                    collision_detected = True
+                    break
+        
+        # If collision detected, revert to original position
+        if collision_detected:
+            boss['x'] = original_boss_x
+            boss['y'] = original_boss_y
+            # Stop knockback
+            boss['knockback_x'] = 0
+            boss['knockback_y'] = 0
+        
+        boss['knockback_x'] *= 0.85
+        boss['knockback_y'] *= 0.85
+        
+        # Convert to screen coordinates
+        boss_screen_x = boss['x'] + cam_x
+        boss_screen_y = boss['y'] + cam_y
+        
+        # Check distance to player for movement
+        x_distance = abs(x - boss_screen_x)
+        y_distance = abs(y - boss_screen_y)
+        
+        # Boss AI based on mode
+        if (x_distance < boss['follow_radius'] and y_distance < boss['follow_radius'] and 
+            abs(boss['knockback_x']) < 5 and abs(boss['knockback_y']) < 5):
+            
+            # Store original position for collision checking
+            original_x = boss['x']
+            original_y = boss['y']
+            
+            # Mode 2: Dash ability
+            if boss_mode == 2:
+                current_time_ms = pygame.time.get_ticks()
+                # 40% chance to dash every 5 seconds (not guaranteed)
+                if current_time_ms - boss_last_dash_time > 5000:
+                    if random.randint(1, 100) <= 40:  # 40% chance
+                        boss_dash_toward_player()
+                        boss_last_dash_time = current_time_ms
+                        if debug:
+                            print("Boss dashed!")
+                    else:
+                        boss_last_dash_time = current_time_ms  # Reset timer even if no dash
+            
+            # Mode 3: Power stealing
+            if boss_mode == 3:
+                current_time_ms = pygame.time.get_ticks()
+                if current_time_ms - boss_power_steal_timer > 10000:  # Every 10 seconds
+                    steal_player_power()
+                    boss_power_steal_timer = current_time_ms
+            
+            # Normal movement (all modes)
+            if x > boss_screen_x:
+                boss['x'] += boss['speed'] * dt
+            elif x < boss_screen_x:
+                boss['x'] -= boss['speed'] * dt
+            if y > boss_screen_y:
+                boss['y'] += boss['speed'] * dt
+            elif y < boss_screen_y:
+                boss['y'] -= boss['speed'] * dt
+            
+            # Check collisions (boss can't walk through walls)
+            boss_rect = pygame.Rect(boss['x'], boss['y'], boss_width, boss_height)
+            collision_detected = False
+            
+            # Check fence collision
+            for fence in fence_rects:
+                if boss_rect.colliderect(fence):
+                    collision_detected = True
+                    break
+            
+            # Check wall collision
+            if not collision_detected:
+                for wall in wall_rects:
+                    if 'ability_requirement' in wall and wall['ability_requirement'] in abilitys:
+                        continue  # Skip walls that should be gone
+                    if boss_rect.colliderect(wall['rect']):
+                        collision_detected = True
+                        break
+            
+            if collision_detected:
+                # Revert to original position
+                boss['x'] = original_x
+                boss['y'] = original_y
+        
+        # Create boss sprite (white flash effect)
+        boss_surface = boss_sprite.copy()  # Use dedicated boss sprite
+        if current_time - boss['flash_time'] < 200:  # Flash for 200ms
+            white_surface = pygame.Surface(boss_surface.get_size())
+            white_surface.fill((255, 255, 255))
+            white_surface.set_alpha(180)
+            boss_surface.blit(white_surface, (0, 0), special_flags=pygame.BLEND_ADD)
+        
+        # Draw boss
+        win.blit(boss_surface, (boss_screen_x, boss_screen_y))
+        
+        # Draw boss health bar (larger than normal enemies)
+        bar_width = 60
+        bar_height = 8
+        bar_x = boss_screen_x + (boss_width - bar_width) // 2
+        bar_y = boss_screen_y - 15
+        
+        # Background (red)
+        pygame.draw.rect(win, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+        # Health (green)
+        health_width = int((boss['health'] / boss['max_health']) * bar_width)
+        pygame.draw.rect(win, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
+        
+        # Draw boss mode indicator
+        font = pygame.font.Font(None, 24)
+        mode_text = font.render(f"Boss Mode {boss_mode}", True, (255, 0, 0))
+        win.blit(mode_text, (boss_screen_x - 10, boss_screen_y - 35))
+
     # Check if wind attack animation should be hidden after 1 second
     if w_attack == "left" and current_time - animation_time > 1000:
         w_attack = None
@@ -848,20 +1318,46 @@ while done:
         enemy_screen_x = enemy['x'] + cam_x
         enemy_screen_y = enemy['y'] + cam_y
         if (enemy_screen_x - 20) <= x <= (enemy_screen_x + 20) and (enemy_screen_y - 20) <= y <= (enemy_screen_y + 20):
-            # Only print if at least 1 second has passed since last hit
-            if current_time - last_enemy_hit_time > 1000:
+            # Only damage player if not in god mode and at least 1 second has passed since last hit
+            if not god_mode and current_time - last_enemy_hit_time > 1000:
                 if debug == True:
                     print(f"Hit by enemy {i + 1}!")
                 player_health -= 1
                 last_enemy_hit_time = current_time
+                
+                # Calculate player knockback direction
+                player_x = -cam_x + x
+                player_y = -cam_y + y
+                dx = player_x - enemy['x']
+                dy = player_y - enemy['y']
+                distance = (dx ** 2 + dy ** 2) ** 0.5
+                if distance > 0:
+                    # Normalize direction and apply knockback force
+                    player_knockback_x = (dx / distance) * 12  # 5 pixel knockback per frame
+                    player_knockback_y = (dy / distance) * 12
 
-    for fence in fence_rects:
-        # Adjust fence position by camera offset for collision detection
-        fence_screen_rect = fence.move(cam_x, cam_y)
-        if player_rect.colliderect(fence_screen_rect):
-            collide = True
-
-
+    # Check collision with boss
+    if boss and boss_mode > 0:
+        boss_screen_x = boss['x'] + cam_x
+        boss_screen_y = boss['y'] + cam_y
+        if (boss_screen_x) <= x <= (boss_screen_x + boss_width) and (boss_screen_y) <= y <= (boss_screen_y + boss_height):
+            # Only damage player if not in god mode and at least 1 second has passed since last hit
+            if not god_mode and current_time - last_enemy_hit_time > 1000:
+                if debug:
+                    print(f"Hit by Boss Mode {boss_mode}!")
+                player_health -= boss['damage']  # Boss does 3 damage
+                last_enemy_hit_time = current_time
+                
+                # Calculate player knockback direction
+                player_x = -cam_x + x
+                player_y = -cam_y + y
+                dx = player_x - boss['x']
+                dy = player_y - boss['y']
+                distance = (dx ** 2 + dy ** 2) ** 0.5
+                if distance > 0:
+                    # Normalize direction and apply knockback force
+                    player_knockback_x = (dx / distance) * 20  # 8 pixel knockback per frame (boss hits harder)
+                    player_knockback_y = (dy / distance) * 20
 
     # tome collision
     if collide == True:
@@ -938,6 +1434,13 @@ while done:
             pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, enemy_width, enemy_height), 2)
             pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + enemy_width/2), int(enemy_y + enemy_height/2)), follow_radius, 1)
 
+        # Draw boss position and follow radius
+        if boss and boss_mode > 0:
+            boss_x = boss['x'] + cam_x
+            boss_y = boss['y'] + cam_y
+            pygame.draw.rect(win, (255, 0, 255), (boss_x, boss_y, boss_width, boss_height), 3)  # Magenta for boss
+            pygame.draw.circle(win, (255, 0, 255), (int(boss_x + boss_width/2), int(boss_y + boss_height/2)), boss['follow_radius'], 2)  # Boss follow radius
+
         win.blit(fps_text, (500, 30))
         # Display camera coordinates (this shows actual movement)
         cam_text = font.render(f"Camera: X:{int(cam_x)}, Y:{int(cam_y)}", True, (20, 20, 20))
@@ -1005,6 +1508,80 @@ while done:
             knockback_strength = current_difficulty[4]
             player_max_health = current_difficulty[5]
             
+            # Initialize player health system
+            player_health = player_max_health
+            
+            # Reset all game state
+            boss = None
+            boss_mode = 0
+            game_won = False
+            boss_spawn_location = [1000, 1000]  # Reset boss spawn location
+            abilitys = []
+            abilitys_picked = 0
+            wind_tomb = True
+            fire_tomb = True
+            earth_tomb = True
+            water_tomb = True
+            
+            # Recreate enemies
+            enemies = []
+            for i in range(num_enemies):
+                if i < len(enemy_spawn_points):
+                    enemies.append({
+                        'x': enemy_spawn_points[i][0],
+                        'y': enemy_spawn_points[i][1], 
+                        'health': enemy_max_health,
+                        'max_health': enemy_max_health,
+                        'flash_time': 0,
+                        'knockback_x': 0,
+                        'knockback_y': 0
+                    })
+
+    # Check win condition
+    if game_won:
+        restart_signal = game_win()
+        if restart_signal == "restart":
+            # Force difficulty selection on restart
+            diff_menu()
+            
+            # Update difficulty and related variables after menu selection
+            current_difficulty = difficulty_settings.get(difficulty, {})
+            num_enemies = current_difficulty[0]
+            enemy_speed = current_difficulty[1]
+            follow_radius = current_difficulty[2]
+            enemy_max_health = current_difficulty[3]
+            knockback_strength = current_difficulty[4]
+            player_max_health = current_difficulty[5]
+            
+            # Initialize player health system
+            player_health = player_max_health
+            
+            # Reset all game state
+            boss = None
+            boss_mode = 0
+            game_won = False
+            boss_spawn_location = [1000, 1000]  # Reset boss spawn location
+            abilitys = []
+            abilitys_picked = 0
+            wind_tomb = True
+            fire_tomb = True
+            earth_tomb = True
+            water_tomb = True
+            
+            # Recreate enemies
+            enemies = []
+            for i in range(num_enemies):
+                if i < len(enemy_spawn_points):
+                    enemies.append({
+                        'x': enemy_spawn_points[i][0],
+                        'y': enemy_spawn_points[i][1], 
+                        'health': enemy_max_health,
+                        'max_health': enemy_max_health,
+                        'flash_time': 0,
+                        'knockback_x': 0,
+                        'knockback_y': 0
+                    })
+            
             # Reset all game variables for restart
             player_health = player_max_health
 
@@ -1012,8 +1589,8 @@ while done:
             # Reset player position and camera
             x = screen_width / 2
             y = screen_height / 2
-            cam_x = 0      # Reset to starting position - change this to match your desired starting position
-            cam_y = 0      # Reset to starting position - change this to match your desired starting position
+            cam_x = -595
+            cam_y = -1155      # Reset to starting position - change this to match your desired starting position
 
             # Reset abilities and tombs
             abilitys.clear()
