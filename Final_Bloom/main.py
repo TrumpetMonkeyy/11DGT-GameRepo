@@ -399,13 +399,13 @@ def show_help_menu():
     info_text1 = small_font.render("To collect tomes press 'B' while on top of one", True, (255, 255, 255))
     info_text_rect1 = info_text1.get_rect(center=(screen_width // 2, screen_height // 2 + 10))
 
-    ability_info_text1 = small_font.render("Wind: low damage, very high knockback | Fire: High damage, low knockback", True, (255, 255, 255))
+    ability_info_text1 = small_font.render("Wind: Low damage, Very high knockback | Fire: High damage, Low knockback", True, (255, 255, 255))
     ability_info_text_rect1 = ability_info_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 300))
-    ability_info_text2 = small_font.render("Water: medium damage, high knockback | Earth: Very high damage, very low knockback", True, (255, 255, 255))
+    ability_info_text2 = small_font.render("Water: Medium damage, High knockback | Earth: Very high damage, Very low knockback", True, (255, 255, 255))
     ability_info_text_rect2 = ability_info_text2.get_rect(center=(screen_width // 2, screen_height // 2 - 260))
-    ability_info_text3 = small_font.render("These are diffrent eliments you will get to obtane along your jerny.", True, (255, 255, 255))
+    ability_info_text3 = small_font.render("These are the different elements you will get to obtain along your journey.", True, (255, 255, 255))
     ability_info_text_rect3 = ability_info_text3.get_rect(center=(screen_width // 2, screen_height // 2 - 220))
-    ability_info_text4 = small_font.render(" Take the time to get used to the goods and bads of each of them.", True, (255, 255, 255))
+    ability_info_text4 = small_font.render(" Take the time to get used to the pros and cons of each of them.", True, (255, 255, 255))
     ability_info_text_rect4 = ability_info_text4.get_rect(center=(screen_width // 2, screen_height // 2 - 180))
 
     info_text = small_font.render("Press ENTER to start playing, or ESC to go back to the menu", True, (255, 255, 255))
@@ -449,13 +449,13 @@ def game_over():
 
     small_font = pygame.font.SysFont(None, 36)  # sets the fonts
 
-    help_text = small_font.render("your jerny has sadly come to an end", True, (255, 255, 255))
+    help_text = small_font.render("Your journey has sadly come to an end.", True, (255, 255, 255))
     help_text_rect = help_text.get_rect(center=(screen_width // 2, screen_height // 2 - 80))
-    help_text1 = small_font.render("you have failed to save New Zealand from 'Death'", True, (255, 255, 255))
+    help_text1 = small_font.render("You have failed to save New Zealand from 'Hine-nui-te-pō'", True, (255, 255, 255))
     help_text1_rect = help_text1.get_rect(center=(screen_width // 2, screen_height // 2 - 40))
-    info_text1 = small_font.render("to restart press 'R'", True, (255, 255, 255))
+    info_text1 = small_font.render("To restart press 'R',", True, (255, 255, 255))
     info_text_rect1 = info_text1.get_rect(center=(screen_width // 2, screen_height // 2))
-    info_text2 = small_font.render("or press 'esc' to quit", True, (255, 255, 255))
+    info_text2 = small_font.render("or press 'Esc' to quit", True, (255, 255, 255))
     info_text_rect2 = info_text2.get_rect(center=(screen_width // 2, screen_height // 2 + 40))
 
     while True:
@@ -535,7 +535,7 @@ e_attack = None
 a_attack = None
 
 # allow the tilemap to move with the player
-#starting pos
+# starting pos
 # Positive cam_x moves the map left (player appears to start more to the right)
 # Positive cam_y moves the map up (player appears to start more down)
 # Negative values do the opposite
@@ -574,7 +574,7 @@ while done:
             elif event.key == pygame.K_4:
                 abilitys_picked = 4
             
-        # abilatys
+        # abilitys
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e or event.key == pygame.K_SLASH:
                 # Determine which ability to use based on selection
@@ -912,7 +912,7 @@ while done:
             enemy_y = enemy['y'] + cam_y
             pygame.draw.rect(win, (255, 0, 0), (enemy_x, enemy_y, enemy_width, enemy_height), 2)
             pygame.draw.circle(win, (255, 255, 0), (int(enemy_x + enemy_width/2), int(enemy_y + enemy_height/2)), follow_radius, 1)
-        
+
         win.blit(fps_text, (500, 30))
         # Display camera coordinates (this shows actual movement)
         cam_text = font.render(f"Camera: X:{int(cam_x)}, Y:{int(cam_y)}", True, (20, 20, 20))
