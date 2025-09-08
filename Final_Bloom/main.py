@@ -60,14 +60,14 @@ sprite_path = os.path.join(os.path.dirname(__file__), 'assets', 'sprites', 'play
 player_sprite = pygame.image.load(sprite_path).convert_alpha()
 player_sprite = pygame.transform.scale(player_sprite, (sprite_width, sprite_height))
 
-scale = 2  #changes the scale 1=defalt
-scaled_tiles = [] #the coordanets and image gets saved in this list
+scale = 2  #changes the scale 1=default
+scaled_tiles = [] #the coordinates and image gets saved in this list
 fence_rects = []
 
 for layer in tmx_data.visible_layers:
     if isinstance(layer, pytmx.TiledTileLayer):
         for x_tile, y_tile, image in layer.tiles():
-            #pulls the tiles from the file and skips the empty and non image tiles/code that helps the 3rd party aplacation
+            #pulls the tiles from the file and skips the empty and non image tiles/code that helps the 3rd party application
             if image:
                 scaled_image = pygame.transform.scale(
                     image,
@@ -139,9 +139,9 @@ play_background_music()
 
 def player_attack_sounds():
     e_hit_channel.play(e_hit_sound)
-#abilitys
-abilitys = []
-abilitys_picked = 1
+#abilities
+abilities = []
+abilities_picked = 1
 
 #frame rate
 clock = pygame.time.Clock()
@@ -176,7 +176,7 @@ def show_main_menu():
             win.blit(img, (px, py)) #shows the map
         win.blit(bg_trans, (0, 0)) #applys the filter ontop
 
-        win.blit(title_text, title_text_rect) #places out the text in the coordanets
+        win.blit(title_text, title_text_rect) #places out the text in the coordinates
         win.blit(play_text, play_text_rect)
         win.blit(quit_text, quit_text_rect)
         win.blit(help_text, help_text_rect)
@@ -217,9 +217,9 @@ def show_help_menu():
         clock.tick(60)
         for img, px, py in scaled_tiles:
             win.blit(img, (px, py)) #shows the map
-        win.blit(bg_trans, (0, 0)) #applys the filter ontop
+        win.blit(bg_trans, (0, 0)) #applies the filter ontop
 
-        win.blit(help_text, help_text_rect) #displays the text and places them at coordanets
+        win.blit(help_text, help_text_rect) #displays the text and places them at coordinates
         win.blit(info_text, info_text_rect)
 
 
@@ -271,9 +271,9 @@ while done:
         #abilities
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # Left mouse button
-                if "wind" in abilitys and abilitys_picked == 1:
+                if "wind" in abilities and abilities_picked == 1:
                     player_attack_sounds()
-                if "fire" in abilitys and abilitys_picked == 2:
+                if "fire" in abilities and abilities_picked == 2:
                     print("fire")
 
     #draw the tilemap
@@ -322,26 +322,26 @@ while done:
         for rect in fence_rects:
             pygame.draw.rect(win, (255, 255, 255), rect, 2)
 
-# abilitys
+# abilities
     if keys[pygame.K_1]:
-        if "wind" in abilitys:
-            abilitys_picked = 1
+        if "wind" in abilities:
+            abilities_picked = 1
     
     if keys[pygame.K_2]:
-        if "fire" in abilitys:
-            abilitys_picked = 2
+        if "fire" in abilities:
+            abilities_picked = 2
 
-    print(abilitys_picked)
-    print(abilitys)
+    print(abilities_picked)
+    print(abilities)
 
     if player_rect.colliderect(wind_tome_rect):
-        if keys[pygame.K_b] and "wind" not in abilitys:
+        if keys[pygame.K_b] and "wind" not in abilities:
             wind_tome = False
-            abilitys.append("wind")
+            abilities.append("wind")
     if player_rect.colliderect(fire_tome_rect):
-        if keys[pygame.K_b] and "fire" not in abilitys:
+        if keys[pygame.K_b] and "fire" not in abilities:
             fire_tome = False
-            abilitys.append("fire")
+            abilities.append("fire")
     #update the display
     pygame.display.update()
 
