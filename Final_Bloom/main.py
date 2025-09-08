@@ -624,7 +624,7 @@ a_attack = None
 # Boss system variables
 boss = None
 boss_mode = 0  # 0 = no boss, 1 = first mode, 2 = second mode, 3 = third mode
-boss_spawn_location = [1000, 1000]  # Where boss spawns
+boss_spawn_location = [2916, 3266]  # Where boss spawns
 boss_last_dash_time = 0
 boss_power_steal_timer = 0
 game_won = False  # Win condition
@@ -982,7 +982,7 @@ while done:
 
     # Create the custom hitbox
     player_rect = pygame.Rect(hitbox_x, hitbox_y, hitbox_width, hitbox_height)
-    win.blit(player_front, (x, y))
+
 
     # Draw all walls from the wall_locations list (only if they should be visible)
     for wall_data in wall_locations:
@@ -1376,7 +1376,7 @@ while done:
     # moves character for as long as the key gets held down in whatever direction i choose
     # set up a list to do this
     keys = pygame.key.get_pressed()
-
+    win.blit(player_front, (x, y))
     if keys[pygame.K_UP] and collide == False or keys[pygame.K_w] and collide == False:
         cam_y += vel * dt
         win.blit(player_back, (x, y))
@@ -1515,14 +1515,14 @@ while done:
             boss = None
             boss_mode = 0
             game_won = False
-            boss_spawn_location = [1000, 1000]  # Reset boss spawn location
+            boss_spawn_location = [2916, 3266]  # Reset boss spawn location
             abilitys = []
             abilitys_picked = 0
             wind_tomb = True
             fire_tomb = True
             earth_tomb = True
             water_tomb = True
-            
+
             # Recreate enemies
             enemies = []
             for i in range(num_enemies):
@@ -1536,7 +1536,13 @@ while done:
                         'knockback_x': 0,
                         'knockback_y': 0
                     })
+            # Reset player position and camera
+            x = screen_width / 2
+            y = screen_height / 2
+            cam_x = -595
+            cam_y = -1155      # Reset to starting position - change this to match your desired starting position
 
+            
     # Check win condition
     if game_won:
         restart_signal = game_win()
@@ -1560,7 +1566,7 @@ while done:
             boss = None
             boss_mode = 0
             game_won = False
-            boss_spawn_location = [1000, 1000]  # Reset boss spawn location
+            boss_spawn_location = [2916, 3266]  # Reset boss spawn location
             abilitys = []
             abilitys_picked = 0
             wind_tomb = True
@@ -1635,6 +1641,20 @@ while done:
         if keys[pygame.K_b] and "water" not in abilitys:
             water_tomb = False
             abilitys.append("water")
+
+    # Create teleport hitbox (invisible)
+    teleport_rect = pygame.Rect(622 + cam_x, 1505 + cam_y, 28, 53)  # Width: 650-622=28, Height: 1558-1505=53
+    
+    # Check teleport collision
+    if player_rect.colliderect(teleport_rect):
+        if keys[pygame.K_b]:
+            # Teleport player by adjusting camera position
+            # Target world coordinates: (-1794, -2921)
+            # Calculate new camera position to center player at target
+            cam_x = -1794  # Move camera so player appears at target x
+            cam_y = -2921  # Move camera so player appears at target y
+            if debug:
+                print("Player teleported!")
 
     # Display wind attack animations
     if w_attack == "left":
