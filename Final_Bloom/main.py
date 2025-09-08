@@ -173,37 +173,39 @@ side_wall_load = pygame.image.load(side_wall_path).convert_alpha()
 flat_wall_load = pygame.image.load(flat_wall_path).convert_alpha()
 flat_wall_width, flat_wall_hight = flat_wall_load.get_size()
 side_wall_width, side_wall_hight = side_wall_load.get_size()
-side_wall = pygame.transform.scale(side_wall_load, (side_wall_width*4, side_wall_hight*4))
-flat_wall = pygame.transform.scale(flat_wall_load, (flat_wall_width*4, flat_wall_hight*4))
+side_wall = pygame.transform.scale(side_wall_load, (side_wall_width*4, side_wall_hight*12))
+flat_wall = pygame.transform.scale(flat_wall_load, (flat_wall_width*11.1, flat_wall_hight*4))
 
-tombs = [90, 50, 200, 150, 300, 300, 80, 90]
+tombs = [1240, 1510, 1220, 365, 1234, 2747, 2745, 1335]
 
 # Wall system - list of wall positions and types
-# Each wall entry: [x, y, wall_type] where wall_type is "side" or "flat"
+# Each wall entry: [x, y, wall_type] or [x, y, wall_type, ability_requirement]
+# If ability_requirement is specified, wall disappears when that ability is collected
 wall_locations = [
-    [80, 80, "side"],     # side wall at position (80, 80)
-    [100, 100, "flat"],   # flat wall at position (100, 100)
-    [200, 150, "side"],   # add more walls as needed
-    [300, 200, "flat"],
-    [400, 100, "side"],
+    [899, 1444, "side", "earth"],
+    [1160, 1859, "flat", "water"],
+    [1583, 1444, "side", "fire"],
 ]
 
 # Create wall rectangles for collision detection
 wall_rects = []
 for wall_data in wall_locations:
-    wall_x, wall_y, wall_type = wall_data
+    wall_x, wall_y, wall_type = wall_data[0], wall_data[1], wall_data[2]
+    ability_requirement = wall_data[3] if len(wall_data) > 3 else None  # Check if ability requirement exists
+    
     if wall_type == "side":
         wall_width = side_wall_width * 4
-        wall_height = side_wall_hight * 4
+        wall_height = side_wall_hight * 12
     else:  # flat wall
-        wall_width = flat_wall_width * 4
+        wall_width = flat_wall_width * 11.3
         wall_height = flat_wall_hight * 4
     
     wall_rects.append({
         'rect': pygame.Rect(wall_x, wall_y, wall_width, wall_height),
         'type': wall_type,
         'x': wall_x,
-        'y': wall_y
+        'y': wall_y,
+        'ability_requirement': ability_requirement  # Store ability requirement
     })
 
 # load enemys
@@ -243,7 +245,7 @@ abilitys_picked = 0
 # difficultys
 difficulty_settings = {
     'easy': [
-        5,   # Number of enemies
+        12,   # Number of enemies
         65,  # Enemy speed (units per frame)
         150, # Follow radius (pixels)
         3,   # Enemy health
@@ -251,7 +253,7 @@ difficulty_settings = {
         8,   # Player health
     ],
     'medium': [
-        10, # num of enemies
+        19, # num of enemies
         100, # speed
         200, # player detection
         5,   # Enemy health
@@ -500,9 +502,35 @@ player_health = player_max_health
 enemy = []
 enemies = []
 enemy_spawn_points = [
-    [400, 300], [600, 400], [800, 200], [300, 500], 
-    [700, 300], [500, 600], [200, 200], [900, 500],
-    [100, 400], [750, 150], [350, 700], [550, 100]
+#easy
+[1400, 1057],
+[1175, 710],
+[1810, 615],
+[2575, 1225],
+[2060, 1330],
+[1825, 2300],
+[1900, 2200],
+[2010, 2330],
+[1230, 2445],
+[480, 2330],
+[555, 2200],
+[665, 2300],
+#medium
+[1040, 1085],
+[1335, 545],
+[2150, 985],
+[2450, 1335],
+[1685, 2205],
+[787, 2200],
+[1230, 2325],
+#hard
+[1810, 875],
+[2575, 715],
+[1450, 1950],
+[1010, 1950],
+[1425, 2495],
+[1040, 2495],
+[750, 1500],
 ]
 
 # Create enemies with health, position, and flash data
@@ -536,8 +564,8 @@ a_attack = None
 # Positive cam_x moves the map left (player appears to start more to the right)
 # Positive cam_y moves the map up (player appears to start more down)
 # Negative values do the opposite
-cam_x = -82
-cam_y = -1224
+cam_x = -595
+cam_y = -1155
 
 last_enemy_hit_time = 0 # the time when the enemy hit the player last
 animation_time = 0
@@ -657,25 +685,39 @@ while done:
     player_rect = pygame.Rect(hitbox_x, hitbox_y, hitbox_width, hitbox_height)
     win.blit(player_front, (x, y))
 
-    # Draw all walls from the wall_locations list
+    # Draw all walls from the wall_locations list (only if they should be visible)
     for wall_data in wall_locations:
-        wall_x, wall_y, wall_type = wall_data
-        if wall_type == "side":
-            win.blit(side_wall, (wall_x + cam_x, wall_y + cam_y))
-        else:  # flat wall
-            win.blit(flat_wall, (wall_x + cam_x, wall_y + cam_y))
+        wall_x, wall_y, wall_type = wall_data[0], wall_data[1], wall_data[2]
+        ability_requirement = wall_data[3] if len(wall_data) > 3 else None
+        
+        # Check if wall should be visible (disappears when required ability is collected)
+        wall_visible = True
+        if ability_requirement and ability_requirement in abilitys:
+            wall_visible = False  # Hide wall if player has the required ability
+            
+        if wall_visible:
+            if wall_type == "side":
+                win.blit(side_wall, (wall_x + cam_x, wall_y + cam_y))
+            else:  # flat wall
+                win.blit(flat_wall, (wall_x + cam_x, wall_y + cam_y))
     # Create tomb rectangles for collision detection
     wind_tomb_rect = pygame.Rect(tombs[0] + cam_x, tombs[1] + cam_y, 84, 68)
     fire_tomb_rect = pygame.Rect(tombs[2] + cam_x, tombs[3] + cam_y, 84, 68)
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
-    # Check wall collisions
+    # Check wall collisions (only for visible walls)
     for wall in wall_rects:
-        # Adjust wall position by camera offset for collision detection
-        wall_screen_rect = wall['rect'].move(cam_x, cam_y)
-        if player_rect.colliderect(wall_screen_rect):
-            collide = True
+        # Check if wall should have collision (disappears when required ability is collected)
+        wall_has_collision = True
+        if wall['ability_requirement'] and wall['ability_requirement'] in abilitys:
+            wall_has_collision = False  # Remove collision if player has the required ability
+            
+        if wall_has_collision:
+            # Adjust wall position by camera offset for collision detection
+            wall_screen_rect = wall['rect'].move(cam_x, cam_y)
+            if player_rect.colliderect(wall_screen_rect):
+                collide = True
 
     # Check fence collisions
     for fence in fence_rects:
@@ -740,6 +782,9 @@ while done:
                         # Check wall collision
             if not collision_detected:
                 for wall in wall_rects:
+                    # Only collide with walls if the required ability hasn't been collected
+                    if 'ability_requirement' in wall and wall['ability_requirement'] in abilitys:
+                        continue  # Skip collision for this wall as the ability has been collected
                     if enemy_rect.colliderect(wall['rect']):
                         collision_detected = True
                         break
@@ -852,6 +897,24 @@ while done:
         show_main_menu()
        
     if debug == True: # debug menu
+        # Display FPS in debug mode
+        fps = clock.get_fps()
+        font = pygame.font.Font(None, 36)
+        fps_text = font.render(f"FPS: {fps:.1f}", True, (20, 20, 20))
+
+        
+        # Display player world coordinates
+        world_x = -cam_x + x
+        world_y = -cam_y + y
+        world_text = font.render(f"World Pos: X:{int(world_x)}, Y:{int(world_y)}", True, (20, 20, 20))
+        win.blit(world_text, (10, 50))
+        
+        # Display wall placement coordinates (for copying to wall_locations)
+        wall_place_x = int(-cam_x + x)
+        wall_place_y = int(-cam_y + y)
+        wall_text = font.render(f"Wall Here: [{wall_place_x}, {wall_place_y}, \"side\"]", True, (0, 150, 0))
+        win.blit(wall_text, (10, 90))
+        
         pygame.draw.rect(win, (255, 0, 0), attack_rect_r)  # Draws a red rectangle for attack_rect
         pygame.draw.rect(win, (255, 255, 0), attack_rect_l)  # Draws a rectangle for attack_rect
         
