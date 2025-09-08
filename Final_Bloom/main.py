@@ -184,7 +184,7 @@ tombs = [90, 50, 200, 150, 300, 300, 80, 90]
 wall_locations = [
     [899, 1444, "side", "earth"],
     [1160, 1859, "flat", "fire"],
-    [1593, 1447, "side", "wind"],
+    [1583, 1444, "side", "wind"],
 
 ]
 
@@ -241,6 +241,16 @@ def player_attack_sounds():
 # abilitys
 abilitys = []
 abilitys_picked = 0
+
+# Konami Code for God Mode
+# Sequence: UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, A, B
+konami_sequence = [
+    pygame.K_UP, pygame.K_UP, pygame.K_DOWN, pygame.K_DOWN,
+    pygame.K_LEFT, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT,
+    pygame.K_a, pygame.K_b
+]
+konami_progress = 0  # Track progress through the sequence
+god_mode = False  # God mode flag
 
 
 # difficultys
@@ -562,6 +572,24 @@ while done:
 
         # debug mode
         if event.type == pygame.KEYDOWN:
+            # Check for Konami code sequence
+            if event.key == konami_sequence[konami_progress]:
+                konami_progress += 1
+                if konami_progress >= len(konami_sequence):
+                    # Toggle god mode
+                    god_mode = not god_mode
+                    konami_progress = 0  # Reset sequence
+                    if god_mode:
+                        print("GOD MODE ACTIVATED! You are now invincible and can walk through walls!")
+                    else:
+                        print("God mode deactivated.")
+            else:
+                # Reset sequence if wrong key is pressed
+                konami_progress = 0
+                # Check if this key starts the sequence
+                if event.key == konami_sequence[0]:
+                    konami_progress = 1
+            
             if event.key == pygame.K_h and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                 debug = not debug
             # sets a verable that changes the ability you selected
@@ -609,8 +637,11 @@ while done:
                             hit_direction = "left"
                         
                         if hit_direction:
-                            # Deal damage based on ability
-                            enemy['health'] -= ability_damage
+                            # Deal damage based on ability (or instant kill in god mode)
+                            if god_mode:
+                                enemy['health'] = 0  # Instant kill in god mode
+                            else:
+                                enemy['health'] -= ability_damage
                             enemy['flash_time'] = pygame.time.get_ticks()  # Start white flash
                             
                             # Calculate knockback direction (away from player)
@@ -681,25 +712,26 @@ while done:
     earth_tomb_rect = pygame.Rect(tombs[4] + cam_x, tombs[5] + cam_y, 84, 68)
     water_tomb_rect = pygame.Rect(tombs[6] + cam_x, tombs[7] + cam_y, 84, 68)
     
-    # Check wall collisions (only for visible walls)
+    # Check wall collisions (only for visible walls and not in god mode)
     for wall in wall_rects:
         # Check if wall should have collision (disappears when required ability is collected)
         wall_has_collision = True
         if wall['ability_requirement'] and wall['ability_requirement'] in abilitys:
             wall_has_collision = False  # Remove collision if player has the required ability
             
-        if wall_has_collision:
+        if wall_has_collision and not god_mode:  # No wall collision in god mode
             # Adjust wall position by camera offset for collision detection
             wall_screen_rect = wall['rect'].move(cam_x, cam_y)
             if player_rect.colliderect(wall_screen_rect):
                 collide = True
 
-    # Check fence collisions
-    for fence in fence_rects:
-        # Adjust fence position by camera offset for collision detection
-        fence_screen_rect = fence.move(cam_x, cam_y)
-        if player_rect.colliderect(fence_screen_rect):
-            collide = True
+    # Check fence collisions (skip in god mode)
+    if not god_mode:
+        for fence in fence_rects:
+            # Adjust fence position by camera offset for collision detection
+            fence_screen_rect = fence.move(cam_x, cam_y)
+            if player_rect.colliderect(fence_screen_rect):
+                collide = True
     # displays the diff tombs to the screen with unique sprites
     if wind_tomb:
         win.blit(wind_tomb_sprite, (tombs[0] + cam_x, tombs[1]+ cam_y))
@@ -823,20 +855,12 @@ while done:
         enemy_screen_x = enemy['x'] + cam_x
         enemy_screen_y = enemy['y'] + cam_y
         if (enemy_screen_x - 20) <= x <= (enemy_screen_x + 20) and (enemy_screen_y - 20) <= y <= (enemy_screen_y + 20):
-            # Only print if at least 1 second has passed since last hit
-            if current_time - last_enemy_hit_time > 1000:
+            # Only damage player if not in god mode and at least 1 second has passed since last hit
+            if not god_mode and current_time - last_enemy_hit_time > 1000:
                 if debug == True:
                     print(f"Hit by enemy {i + 1}!")
                 player_health -= 1
                 last_enemy_hit_time = current_time
-
-    for fence in fence_rects:
-        # Adjust fence position by camera offset for collision detection
-        fence_screen_rect = fence.move(cam_x, cam_y)
-        if player_rect.colliderect(fence_screen_rect):
-            collide = True
-
-
 
     # tome collision
     if collide == True:
@@ -987,8 +1011,8 @@ while done:
             # Reset player position and camera
             x = screen_width / 2
             y = screen_height / 2
-            cam_x = 0      # Reset to starting position - change this to match your desired starting position
-            cam_y = 0      # Reset to starting position - change this to match your desired starting position
+            cam_x = -595
+            cam_y = -1155     # Reset to starting position
 
             # Reset abilities and tombs
             abilitys.clear()
