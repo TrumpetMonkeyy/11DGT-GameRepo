@@ -624,7 +624,7 @@ a_attack = None
 # Boss system variables
 boss = None
 boss_mode = 0  # 0 = no boss, 1 = first mode, 2 = second mode, 3 = third mode
-boss_spawn_location = [2916, 3266]  # Where boss spawns
+boss_spawn_location = [3000, 3232]  # Where boss spawns
 boss_last_dash_time = 0
 boss_power_steal_timer = 0
 game_won = False  # Win condition
@@ -1651,8 +1651,8 @@ while done:
             # Teleport player by adjusting camera position
             # Target world coordinates: (-1794, -2921)
             # Calculate new camera position to center player at target
-            cam_x = -1794  # Move camera so player appears at target x
-            cam_y = -2921  # Move camera so player appears at target y
+            cam_x = -1640  # Move camera so player appears at target x
+            cam_y = -2974  # Move camera so player appears at target y
             if debug:
                 print("Player teleported!")
 
